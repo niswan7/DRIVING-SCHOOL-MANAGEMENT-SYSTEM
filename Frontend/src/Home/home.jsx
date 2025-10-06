@@ -2,10 +2,19 @@ import { Car, Phone, Mail, MapPin, Award, Users, Calendar, Clock } from 'lucide-
 import './home.css';
 
 function HOME() {
+  
+  // Function for smooth scroll (in a real app, you'd use a router's Link component)
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <nav className="navbar">
-        <div className="nav-logo">
+        <div className="nav-logo" onClick={() => scrollToSection('home')}>
           <Car className="logo-icon" size={32} />
           <span className="logo-text">DriveEasy</span>
         </div>
@@ -13,14 +22,17 @@ function HOME() {
           DRIVING SCHOOL MANAGEMENT SYSTEM
         </div>
         <div className="nav-links">
-          <div className="nav-link active">Home</div>
-          <div className="nav-link">About</div>
-          <div className="nav-link">Contact</div>
-          <div className="nav-link login-btn">Login</div>
+          {/* Updated Nav Links for Scrolling */}
+          <div className="nav-link active" onClick={() => scrollToSection('home')}>Home</div>
+          <div className="nav-link" onClick={() => scrollToSection('about')}>About</div>
+          <div className="nav-link" onClick={() => scrollToSection('contact')}>Contact</div>
+          {/* Updated Login Link */}
+          <a href="/login" className="nav-link login-btn">Login</a>
         </div>
       </nav>
 
-      <div className="hero-section-home">
+      {/* Added ID for Home Section */}
+      <div className="hero-section-home" id="home">
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1 className="hero-title-main">
@@ -30,8 +42,10 @@ function HOME() {
             Professional driving instruction with certified instructors. Start your journey to becoming a safe and confident driver today.
           </p>
           <div className="hero-buttons">
-            <button className="cta-primary">Book a Lesson</button>
-            <button className="cta-secondary">View Courses</button>
+            {/* Added Destination to 'Book a Lesson' (Assuming a Booking Page) */}
+            <a href="/login" className="cta-primary">Book a Lesson</a>
+            {/* Added Destination to 'View Courses' */}
+            <a href="/courses" className="cta-secondary">View Courses</a>
           </div>
         </div>
         <div className="hero-image-grid">
@@ -58,6 +72,7 @@ function HOME() {
         </div>
       </div>
 
+      {/* Added ID for About Section */}
       <div className="about-section" id="about">
         <div className="section-container">
           <div className="section-badge">About Us</div>
@@ -102,6 +117,7 @@ function HOME() {
         </div>
       </div>
 
+      {/* Added ID for Contact Section */}
       <div className="contact-section" id="contact">
         <div className="section-container">
           <div className="section-badge">Get In Touch</div>
@@ -170,18 +186,21 @@ function HOME() {
 
           <div className="footer-column">
             <h4>Quick Links</h4>
-            <a href="#" className="footer-link">Home</a>
-            <a href="#about" className="footer-link">About Us</a>
-            <a href="#contact" className="footer-link">Contact</a>
-            <a href="#" className="footer-link">Courses</a>
+            {/* Quick Links Updated for Scrolling and Login/Courses */}
+            <div className="footer-link" onClick={() => scrollToSection('home')}>Home</div>
+            <div className="footer-link" onClick={() => scrollToSection('about')}>About Us</div>
+            <a href="/login" className="footer-link">Login</a>
+            <a href="/courses" className="footer-link">Courses</a>
+            <div className="footer-link" onClick={() => scrollToSection('contact')}>Contact</div>
           </div>
 
           <div className="footer-column">
             <h4>Services</h4>
-            <a href="#" className="footer-link">Beginner Lessons</a>
-            <a href="#" className="footer-link">Advanced Training</a>
-            <a href="#" className="footer-link">Defensive Driving</a>
-            <a href="#" className="footer-link">Road Test Prep</a>
+            {/* Services Links Updated for Courses and Login */}
+            <a href="/courses" className="footer-link">Beginner Lessons</a>
+            <a href="/courses" className="footer-link">Advanced Training</a>
+            <a href="/courses" className="footer-link">Defensive Driving</a>
+            <a href="/login" className="footer-link">Road Test Prep</a>
           </div>
 
           <div className="footer-column">
