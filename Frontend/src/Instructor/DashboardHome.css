@@ -1,0 +1,155 @@
+/* Importing fonts and base styles from main app CSS if needed */
+/* @import './home.css'; */
+
+/* --- Dashboard Home Section --- */
+.dashboard-home-section {
+  padding: 4rem 2rem;
+  background: #1a1a1a;
+  color: #e2e8f0;
+  min-height: calc(100vh - 80px); /* Adjust based on header height */
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-header-content {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.dashboard-title-main {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-description {
+  font-size: 1.2rem;
+  color: #a0aec0;
+}
+
+/* --- Stats Grid --- */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto 4rem;
+}
+
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.dashboard-card:hover::before {
+  opacity: 1;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-card .card-icon {
+  margin-bottom: 1rem;
+  transition: transform 0.4s ease;
+}
+
+.dashboard-card:hover .card-icon {
+  transform: scale(1.1);
+}
+
+.dashboard-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+}
+
+.stat-description {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- Action Grid --- */
+.dashboard-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.action-card {
+  background: #252525;
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.action-card:hover {
+  transform: translateY(-8px);
+  border-color: #ff8c00;
+  box-shadow: 0 15px 40px rgba(255, 140, 0, 0.2);
+}
+
+.action-card svg {
+  color: #ff8c00;
+  filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.6));
+  transition: transform 0.4s ease;
+}
+
+.action-card:hover svg {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.action-card p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  color: #ffffff;
+}
+
+/* Color variations for the stat cards */
+.dashboard-card.blue .card-icon svg { color: #3b82f6; filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)); }
+.dashboard-card.green .card-icon svg { color: #22c55e; filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.6)); }
+.dashboard-card.purple .card-icon svg { color: #8b5cf6; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6)); }
+.dashboard-card.orange .card-icon svg { color: #ff8c00; filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.6)); }

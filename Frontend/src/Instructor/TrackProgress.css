@@ -1,0 +1,250 @@
+/* Color Palette:
+   Primary Orange: #ff8c00
+   Darker Orange: #cc7000
+   Background Dark: #0f0f0f
+   Text White/Light Gray: #ffffff, #e2e8f0, #cbd5e1
+*/
+
+.track-progress-section {
+  padding: 4rem 2rem;
+  background: #1a1a1a;
+  color: #e2e8f0;
+  min-height: calc(100vh - 80px); /* Adjust for header */
+  animation: fadeIn 0.8s ease-out;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  color: #a0aec0;
+}
+
+.progress-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .progress-container {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.student-list-card,
+.progress-details-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: slideInLeft 0.8s ease-out;
+}
+
+.progress-details-card {
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ff8c00;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.student-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.student-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  background: #252525;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.student-item:hover {
+  background: #2c2c2c;
+  transform: translateY(-3px);
+  border-color: #ff8c00;
+}
+
+.student-item.active {
+  background: #333;
+  border-color: #ff8c00;
+  box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2);
+}
+
+.user-icon {
+  background: rgba(255, 140, 0, 0.1);
+  border-radius: 50%;
+  padding: 0.75rem;
+  color: #ff8c00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-details {
+  flex-grow: 1;
+}
+
+.student-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.progress-value {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.progress-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-form label {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.progress-form input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #333;
+  background-color: #222;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.progress-form input:focus {
+  outline: none;
+  border-color: #ff8c00;
+  box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
+}
+
+.progress-chart-placeholder {
+  background: #252525;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-chart-placeholder p {
+  color: #a0aec0;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.chart-bar {
+  height: 20px;
+  background-color: #ff8c00;
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.update-btn, .history-btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.update-btn {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.update-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6);
+}
+
+.history-btn {
+  background: #555;
+  color: #fff;
+}
+
+.history-btn:hover {
+  background: #666;
+  transform: translateY(-2px);
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ff4d4d;
+  background-color: rgba(255, 77, 77, 0.1);
+  border: 1px solid #ff4d4d;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.instruction-message {
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+  margin-top: 2rem;
+}
