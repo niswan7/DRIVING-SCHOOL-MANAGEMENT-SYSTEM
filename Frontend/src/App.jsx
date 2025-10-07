@@ -2,6 +2,7 @@ import HOME from './Home/home.jsx'
 import Login from './Login/login.jsx'
 import StudentDashboard from './Student/Student.jsx';
 import InstructorDashboard from './Instructor/instructorDashboard.jsx';
+import AdminDashboard from './Admin/Admindashboard.jsx';
 import { Route, Routes } from 'react-router-dom'
 function App() {
 
@@ -11,6 +12,7 @@ function App() {
          <Route path='/Login' element={<Login/>}/>
           <Route path='/Student' element={<StudentDashboard/>}/>
           <Route path='/Instructor' element={<InstructorDashboard/>}/>
+          <Route path='/Admin' element={<AdminDashboard/>}/>
     </Routes>
   
 

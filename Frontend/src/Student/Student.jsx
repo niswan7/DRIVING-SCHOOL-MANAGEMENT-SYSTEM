@@ -21,7 +21,7 @@ function StudentDashboard() {
     },
     payment: {
       lastPaid: 'September 15, 2025',
-      amount: '$499.00',
+      amount: 'Rs. 4999.00',
     },
     notifications: [
       { id: 1, text: 'Your lesson on Oct 8 is confirmed.', time: '1 day ago' },
