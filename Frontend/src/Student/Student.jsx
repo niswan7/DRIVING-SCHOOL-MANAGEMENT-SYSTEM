@@ -1,7 +1,6 @@
 import React from 'react';
 import { BookOpen, Calendar, User, BarChart, Clock, LogOut, PlusCircle, CreditCard, Bell, Star } from 'lucide-react';
 import './Student.css';
-import GlobalStyles from './GlobalStyles';
 
 
 function StudentDashboard() {
@@ -37,7 +36,6 @@ const progressPercentage = (studentData.progress.hours / studentData.progress.to
 
 return (
     <>
-    
     <div className="dashboard-container">
       <div className="dashboard-view">
         <div className="dashboard-header">
