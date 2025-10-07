@@ -20,7 +20,7 @@ function Login() {
     } else if (username === "instructor" && password === "12345") {
         navigate('/instructor');
     } else if (username === "student" && password === "12345") {
-        navigate('/student');
+        navigate('/Student');
     } else {
         alert("Invalid credentials");
     }
@@ -75,6 +75,7 @@ function Login() {
         </form>
 
         <div className="login-footer-links" >
+          <a href="/" className="footer-link">Back</a>
           <a href="#" className="footer-link">Forgot Password?</a>
           <a href="#" className="footer-link">New Student Sign Up</a>
         </div>
