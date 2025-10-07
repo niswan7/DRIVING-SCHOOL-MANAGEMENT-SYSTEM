@@ -1,0 +1,263 @@
+/* Color Palette:
+   Primary Orange: #ff8c00
+   Darker Orange: #cc7000
+   Background Dark: #0f0f0f
+   Accent Dark Blue: #1e293b
+   Text White/Light Gray: #ffffff, #e2e8f0, #cbd5e1
+*/
+
+.manage-lessons-section {
+  padding: 4rem 2rem;
+  background: #1a1a1a;
+  color: #e2e8f0;
+  min-height: calc(100vh - 80px); /* Adjust for header */
+  animation: fadeIn 0.8s ease-out;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  color: #a0aec0;
+}
+
+.card-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr 1.5fr;
+  }
+}
+
+.manage-form-card,
+.manage-list-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: slideInLeft 0.8s ease-out;
+}
+
+.manage-list-card {
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ff8c00;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.lesson-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 500px) {
+  .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+.lesson-form label {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.lesson-form input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #333;
+  background-color: #222;
+  color: #fff;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.lesson-form input:focus {
+  outline: none;
+  border-color: #ff8c00;
+  box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.create-btn,
+.save-btn,
+.cancel-btn,
+.edit-btn,
+.delete-btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.create-btn, .save-btn {
+  background: linear-gradient(135deg, #ff8c00 0%, #cc7000 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+}
+
+.create-btn:hover, .save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 0, 0.6);
+}
+
+.cancel-btn {
+  background: #555;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background: #666;
+  transform: translateY(-2px);
+}
+
+.error-message {
+  color: #ff4d4d;
+  background-color: rgba(255, 77, 77, 0.1);
+  border: 1px solid #ff4d4d;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.lesson-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lesson-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  background: #252525;
+}
+
+.lesson-item:hover {
+  transform: translateY(-5px);
+  background: #2c2c2c;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.lesson-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.lesson-info {
+  margin: 0;
+  font-size: 1rem;
+  color: #cbd5e1;
+}
+
+.lesson-info strong {
+  color: #ff8c00;
+}
+
+.lesson-status {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 50px;
+  margin-left: 1rem;
+  text-transform: uppercase;
+}
+
+.lesson-item.scheduled .lesson-status {
+  background-color: #3b82f6;
+  color: #e0f2fe;
+}
+
+.lesson-item.completed .lesson-status {
+  background-color: #22c55e;
+  color: #e0f2f2;
+}
+
+.lesson-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn,
+.delete-btn {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  transition: color 0.3s ease, transform 0.3s ease;
+  padding: 0.5rem;
+}
+
+.edit-btn:hover {
+  color: #ff8c00;
+  transform: scale(1.1);
+}
+
+.delete-btn:hover {
+  color: #ff4d4d;
+  transform: scale(1.1);
+}
+
+.no-lessons-msg {
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+  margin-top: 2rem;
+}
