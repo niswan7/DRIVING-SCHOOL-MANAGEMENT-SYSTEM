@@ -77,7 +77,7 @@ function Login() {
         <div className="login-footer-links" >
           <a href="/" className="footer-link back-btn">Back</a>
           <a href="/forgotpassword" className="footer-link">Forgot Password?</a>
-          <a href="/register" className="footer-link">New Student Sign Up</a>
+          <a href="/register" className="footer-link"> Sign Up</a>
         </div>
       </div>
     </div>
