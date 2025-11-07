@@ -93,7 +93,7 @@ function StudentDashboard() {
               <p className="progress-status">{studentData.progress.status}</p>
             </div>
             <div className="card-footer">
-              <a href="#" className="card-action-button">View Detailed Assessments</a>
+              <a href="/student/viewfeedback" className="card-action-button">View Instructor Feedback</a>
             </div>
           </div>
 
@@ -158,7 +158,7 @@ function StudentDashboard() {
               </p>
             </div>
             <div className="card-footer">
-              <a href="#" className="card-action-button">Provide Feedback</a>
+              <a href="/student/feedback" className="card-action-button">Provide Feedback</a>
             </div>
           </div>
         </div>

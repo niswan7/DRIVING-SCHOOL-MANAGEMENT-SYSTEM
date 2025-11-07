@@ -9,6 +9,7 @@ import ManageSchedule from './manageSchedule.jsx';
 import ConductLessons from './conductLesson.jsx';
 import TrackProgress from './trackProgress.jsx';
 import ViewFeedback from './viewFeedback.jsx';
+import ProvideFeedback from './provideFeedback.jsx';
 import Notifications from './notifications.jsx';
 
 import './InstructorDashboard.css';
@@ -38,32 +39,32 @@ const InstructorDashboard = () => {
     fetchInstructorData();
   }, []);
 
-  const renderPage = () => {
-    switch (activePage) {
-      case 'home':
-        return <DashboardHome data={instructorData} />;
-      case 'schedule':
-        return <ManageSchedule />;
-      case 'lessons':
-        return <ManageLessons />;
+  const renderPage = () => {
+    switch (activePage) {
+      case 'home':
+        return <DashboardHome data={instructorData} />;
+      case 'schedule':
+        return <ManageSchedule />;
+      case 'lessons':
+        return <ManageLessons />;
       case 'conduct-lessons':
         return <ConductLessons />;
-      case 'progress':
-        return <TrackProgress />;
-      case 'feedback':
-        return <ViewFeedback />;
+      case 'progress':
+        return <TrackProgress />;
+      case 'feedback':
+        return <ViewFeedback />;
+      case 'provide-feedback':
+        return <ProvideFeedback />;
       case 'notifications':
         return <Notifications />;
-      default:
-        return <DashboardHome data={instructorData} />;
-    }
-  };
-
-  return (
+      default:
+        return <DashboardHome data={instructorData} />;
+    }
+  };  return (
     <div className="instructor-dashboard-container">
       <Header instructorName={instructorData?.name} />
       <div className="main-layout">
-        <Sidebar setActivePage={setActivePage} activePage={activePage} />
+        <Sidebar setActivePage={setActivePage} activePage={activePage} unreadNotificationCount={unreadNotificationCount} />
         <div className="content-area">
           {renderPage()}
         </div>
@@ -73,3 +74,4 @@ const InstructorDashboard = () => {
 };
 
 export default InstructorDashboard;
+

@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, AlertCircle, Mail, Calendar, CreditCard } from 'lucide-react';
 import './Notifications.css';
 
-const Notifications = () => {
+const Notifications = ({ onNotificationCountChange }) => {
   // Dummy data to simulate notifications from the backend
   const [notifications, setNotifications] = useState([
     {
@@ -39,6 +39,14 @@ const Notifications = () => {
       read: true,
     },
   ]);
+
+  // Update unread count whenever notifications change
+  useEffect(() => {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    if (onNotificationCountChange) {
+      onNotificationCountChange(unreadCount);
+    }
+  }, [notifications, onNotificationCountChange]);
 
   const handleMarkAsRead = (id) => {
     setNotifications(notifications.map(notification => 

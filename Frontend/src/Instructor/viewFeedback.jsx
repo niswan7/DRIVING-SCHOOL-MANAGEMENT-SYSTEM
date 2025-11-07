@@ -1,21 +1,28 @@
-import React, { useState } from 'react';
-import { Star, Filter, MessageCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, Filter, MessageCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { getStudentFeedback } from '../utils/feedbackStorage';
 import './ViewFeedback.css';
 
 const ViewFeedback = () => {
-  // Dummy data for feedback - in a real app, this would be fetched from the backend.
-  const allFeedback = [
-    { id: 1, student: 'Jane Smith', course: 'Beginner Lessons', date: '2025-10-18', rating: 5, comment: 'Amazing instructor, very patient and clear!' },
-    { id: 2, student: 'Mike Johnson', course: 'Advanced Training', date: '2025-10-17', rating: 4, comment: 'Good session, but wished we spent more time on parking.' },
-    { id: 3, student: 'Sarah Lee', course: 'Beginner Lessons', date: '2025-10-16', rating: 5, comment: 'Exceeded my expectations. Highly recommended.' },
-    { id: 4, student: 'Chris Miller', course: 'Defensive Driving', date: '2025-10-15', rating: 3, comment: 'The course content was good, but the schedule was a bit rushed.' },
-  ];
+  // Load feedback from localStorage
+  const [allFeedback, setAllFeedback] = useState([]);
+  const [feedback, setFeedback] = useState([]);
+  
+  useEffect(() => {
+    loadFeedback();
+  }, []);
 
-  const [feedback, setFeedback] = useState(allFeedback);
+  const loadFeedback = () => {
+    const storedFeedback = getStudentFeedback();
+    setAllFeedback(storedFeedback);
+    setFeedback(storedFeedback);
+    setShowNoFeedbackMessage(storedFeedback.length === 0);
+  };
   const [filter, setFilter] = useState({
     course: '',
     date: '',
-    student: ''
+    student: '',
+    rating: ''
   });
   const [showNoFeedbackMessage, setShowNoFeedbackMessage] = useState(false);
 
@@ -34,11 +41,29 @@ const ViewFeedback = () => {
       filteredFeedback = filteredFeedback.filter(f => f.date === filter.date);
     }
     if (filter.student) {
-      filteredFeedback = filteredFeedback.filter(f => f.student.toLowerCase().includes(filter.student.toLowerCase()));
+      filteredFeedback = filteredFeedback.filter(f => f.studentName.toLowerCase().includes(filter.student.toLowerCase()));
+    }
+    if (filter.rating) {
+      filteredFeedback = filteredFeedback.filter(f => f.rating === parseInt(filter.rating));
     }
 
     setFeedback(filteredFeedback);
     setShowNoFeedbackMessage(filteredFeedback.length === 0);
+  };
+
+  const handleResetFilter = () => {
+    setFilter({
+      course: '',
+      date: '',
+      student: '',
+      rating: ''
+    });
+    setFeedback(allFeedback);
+    setShowNoFeedbackMessage(false);
+  };
+
+  const handleRefresh = () => {
+    loadFeedback();
   };
 
   const renderRatingStars = (rating) => {
@@ -56,36 +81,108 @@ const ViewFeedback = () => {
     return stars;
   };
 
+  // Calculate statistics
+  const totalFeedback = feedback.length;
+  const averageRating = totalFeedback > 0 
+    ? (feedback.reduce((sum, f) => sum + f.rating, 0) / totalFeedback).toFixed(1)
+    : 0;
+  const fiveStarCount = feedback.filter(f => f.rating === 5).length;
+
   return (
     <div className="view-feedback-section">
       <div className="section-header">
-        <h1 className="section-title">View Feedback</h1>
+        <h1 className="section-title">Student Feedback</h1>
         <p className="section-subtitle">
           Review ratings and comments submitted by your students.
         </p>
+        <button onClick={handleRefresh} className="refresh-btn">
+          <RefreshCw size={18} /> Refresh Feedback
+        </button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="feedback-stats">
+        <div className="stat-card">
+          <div className="stat-value">{totalFeedback}</div>
+          <div className="stat-label">Total Reviews</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{averageRating}</div>
+          <div className="stat-label">Average Rating</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{fiveStarCount}</div>
+          <div className="stat-label">5-Star Reviews</div>
+        </div>
       </div>
 
       <div className="filter-card">
         <h2 className="card-title"><Filter size={24} /> Filter Feedback</h2>
         <form onSubmit={handleApplyFilter} className="filter-form">
-          <div className="form-group">
-            <label htmlFor="student">Student Name</label>
-            <input type="text" id="student" name="student" value={filter.student} onChange={handleFilterChange} placeholder="e.g., Jane Smith" />
+          <div className="filter-row">
+            <div className="form-group">
+              <label htmlFor="student">Student Name</label>
+              <input 
+                type="text" 
+                id="student" 
+                name="student" 
+                value={filter.student} 
+                onChange={handleFilterChange} 
+                placeholder="e.g., Jane Smith" 
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="course">Course Name</label>
+              <input 
+                type="text" 
+                id="course" 
+                name="course" 
+                value={filter.course} 
+                onChange={handleFilterChange} 
+                placeholder="e.g., Beginner Lessons" 
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="course">Course Name</label>
-            <input type="text" id="course" name="course" value={filter.course} onChange={handleFilterChange} placeholder="e.g., Beginner Lessons" />
+          <div className="filter-row">
+            <div className="form-group">
+              <label htmlFor="date">Date</label>
+              <input 
+                type="date" 
+                id="date" 
+                name="date" 
+                value={filter.date} 
+                onChange={handleFilterChange} 
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="rating">Rating</label>
+              <select 
+                id="rating" 
+                name="rating" 
+                value={filter.rating} 
+                onChange={handleFilterChange}
+                className="filter-select"
+              >
+                <option value="">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="date">Date</label>
-            <input type="date" id="date" name="date" value={filter.date} onChange={handleFilterChange} />
+          <div className="filter-actions">
+            <button type="submit" className="filter-btn">Apply Filters</button>
+            <button type="button" className="reset-btn" onClick={handleResetFilter}>
+              <RefreshCw size={18} /> Reset
+            </button>
           </div>
-          <button type="submit" className="filter-btn">Apply Filters</button>
         </form>
       </div>
 
       <div className="feedback-list-card">
-        <h2 className="card-title"><MessageCircle size={24} /> Student Feedback</h2>
+        <h2 className="card-title"><MessageCircle size={24} /> Feedback List ({totalFeedback})</h2>
         {showNoFeedbackMessage ? (
           <div className="no-feedback-message">
             <AlertCircle size={40} />
@@ -96,14 +193,14 @@ const ViewFeedback = () => {
             {feedback.map(f => (
               <li key={f.id} className="feedback-item">
                 <div className="feedback-header">
-                  <span className="student-name">{f.student}</span>
+                  <span className="student-name">{f.studentName}</span>
                   <div className="feedback-rating">
                     {renderRatingStars(f.rating)}
                   </div>
                 </div>
                 <div className="feedback-meta">
-                  <p className="feedback-course">{f.course}</p>
-                  <p className="feedback-date">{f.date}</p>
+                  <p className="feedback-course">📚 {f.course}</p>
+                  <p className="feedback-date">📅 {new Date(f.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 </div>
                 <p className="feedback-comment">{f.comment}</p>
               </li>

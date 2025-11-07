@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Phone, Mail, MapPin, Award, Users, Calendar, Clock } from 'lucide-react';
+import { Car, Phone, Mail, MapPin, Award, Users, Calendar, Clock, Bike, Truck } from 'lucide-react';
 import './home.css';
 
 function HOME() {
@@ -24,6 +24,7 @@ function HOME() {
         </div>
         <div className="nav-links">
           <div className="nav-link active" onClick={() => scrollToSection('home')}>Home</div>
+          <div className="nav-link" onClick={() => scrollToSection('courses')}>Courses</div>
           <div className="nav-link" onClick={() => scrollToSection('about')}>About</div>
           <div className="nav-link" onClick={() => scrollToSection('contact')}>Contact</div>
           <a href="/login" className="nav-link login-btn">Login</a>
@@ -41,7 +42,7 @@ function HOME() {
           </p>
           <div className="hero-buttons">
             <a href="/login" className="cta-primary">Book a Lesson</a>
-            <a href="/courses" className="cta-secondary">View Courses</a>
+            <button onClick={() => scrollToSection('courses')} className="cta-secondary">View Courses</button>
           </div>
         </div>
         <div className="hero-image-grid">
@@ -64,6 +65,79 @@ function HOME() {
             <Clock size={40} />
             <h3>Quick Learning</h3>
             <p>Fast track options</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="courses-section" id="courses">
+        <div className="section-container">
+          <div className="section-badge">Our Courses</div>
+          <h2 className="section-heading">Choose Your Driving Course</h2>
+          <p className="section-subheading">
+            We offer specialized training programs tailored to different vehicle types and skill levels.
+          </p>
+          <div className="courses-grid">
+            <div className="course-card">
+              <div className="course-icon">
+                <Bike size={48} />
+              </div>
+              <h3>Two Wheeler Only</h3>
+              <p>Master motorcycle and scooter riding with our expert instructors. Perfect for beginners and those seeking to upgrade their skills.</p>
+              <ul className="course-features">
+                <li>✓ Basic controls and balance</li>
+                <li>✓ Traffic navigation</li>
+                <li>✓ Safety gear training</li>
+                <li>✓ License test preparation</li>
+              </ul>
+              <a href="/login" className="course-btn">Enroll Now</a>
+            </div>
+            
+            <div className="course-card featured">
+              
+              <div className="course-icon">
+                <Car size={48} />
+              </div>
+              <h3>Four Wheeler Only</h3>
+              <p>Comprehensive car driving lessons covering all aspects from basics to advanced techniques for confident driving.</p>
+              <ul className="course-features">
+                <li>✓ Manual & automatic transmission</li>
+                <li>✓ Parking and maneuvering</li>
+                <li>✓ Highway driving</li>
+                <li>✓ Defensive driving techniques</li>
+              </ul>
+              <a href="/login" className="course-btn">Enroll Now</a>
+            </div>
+            
+            <div className="course-card">
+              <div className="featured-badge">Most Popular</div>
+              <div className="course-icon">
+                <Users size={48} />
+              </div>
+              <h3>Both Two & Four Wheeler</h3>
+              <p>Complete package for those who want to master both motorcycle and car driving with comprehensive training.</p>
+              <ul className="course-features">
+                <li>✓ Dual vehicle training</li>
+                <li>✓ Cost-effective package</li>
+                <li>✓ Flexible scheduling</li>
+                <li>✓ Complete license preparation</li>
+              </ul>
+              <a href="/login" className="course-btn">Enroll Now</a>
+            </div>
+            
+            <div className="course-card">
+              <div className="course-icon">
+                <Truck size={48} />
+              </div>
+              <h3>Heavy Vehicle License</h3>
+              <p>Professional training for trucks and buses. Learn the skills needed for commercial driving careers.</p>
+              <ul className="course-features">
+                <li>✓ Commercial vehicle handling</li>
+                <li>✓ Load management</li>
+                <li>✓ Long-distance driving</li>
+                <li>✓ Commercial license prep</li>
+              </ul>
+              <a href="/login" className="course-btn">Enroll Now</a>
+            </div>
           </div>
         </div>
       </div>
@@ -172,17 +246,17 @@ function HOME() {
           <div className="footer-column">
             <h4>Quick Links</h4>
             <div className="footer-link" onClick={() => scrollToSection('home')}>Home</div>
+            <div className="footer-link" onClick={() => scrollToSection('courses')}>Courses</div>
             <div className="footer-link" onClick={() => scrollToSection('about')}>About Us</div>
             <a href="/login" className="footer-link">Login</a>
-            <a href="/courses" className="footer-link">Courses</a>
             <div className="footer-link" onClick={() => scrollToSection('contact')}>Contact</div>
           </div>
           <div className="footer-column">
             <h4>Services</h4>
-            <a href="/courses" className="footer-link">Beginner Lessons</a>
-            <a href="/courses" className="footer-link">Advanced Training</a>
-            <a href="/courses" className="footer-link">Defensive Driving</a>
-            <a href="/login" className="footer-link">Road Test Prep</a>
+            <div className="footer-link" onClick={() => scrollToSection('courses')}>Two Wheeler Only</div>
+            <div className="footer-link" onClick={() => scrollToSection('courses')}>Four Wheeler Only</div>
+            <div className="footer-link" onClick={() => scrollToSection('courses')}>Both Two & Four Wheeler</div>
+            <div className="footer-link" onClick={() => scrollToSection('courses')}>Heavy Vehicle License</div>
           </div>
           <div className="footer-column">
             <h4>Contact Info</h4>
