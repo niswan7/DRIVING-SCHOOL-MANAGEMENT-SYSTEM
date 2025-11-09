@@ -1,0 +1,93 @@
+/* AdminFeedback.css */
+
+.feedback-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.feedback-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.feedback-header p {
+    font-size: 1rem;
+    color: #94a3b8;
+    max-width: 500px;
+    margin: 0.5rem auto 0;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feedback-item-admin {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: background 0.3s;
+}
+
+.feedback-item-admin:hover {
+    background: rgba(30, 41, 59, 0.7);
+}
+
+.feedback-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.feedback-author strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+.feedback-author span {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+.feedback-rating-admin {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.feedback-comment-admin {
+    font-style: italic;
+    color: #cbd5e1;
+    margin: 0 0 1rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid #ff8c00;
+}
+
+.feedback-meta-admin {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.btn-delete-feedback {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.btn-delete-feedback:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}

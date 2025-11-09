@@ -1,83 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircle, Edit, Trash2, Save, XCircle } from 'lucide-react';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 import './ManageLessons.css';
 
-const ManageLessons = () => {
-  // Dummy data for lessons - in a real app, this would come from the backend
-  const [lessons, setLessons] = useState([
-    { id: 1, date: '2025-10-15', time: '10:00 AM', student: 'Jane Smith', status: 'Scheduled' },
-    { id: 2, date: '2025-10-16', time: '02:30 PM', student: 'Mike Johnson', status: 'Scheduled' },
-    { id: 3, date: '2025-10-17', time: '09:00 AM', student: 'Sarah Lee', status: 'Completed' },
-  ]);
-
+const ManageLessons = ({ instructorId }) => {
+  const [lessons, setLessons] = useState([]);
+  const [students, setStudents] = useState([]);
   const [form, setForm] = useState({
     date: '',
     time: '',
     student: '',
   });
-
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
 
+  const fetchLessons = async () => {
+    if (!instructorId) return;
+    try {
+      const res = await apiRequest(API_ENDPOINTS.INSTRUCTOR_LESSONS(instructorId));
+      setLessons(res.data || []);
+    } catch (err) {
+      setError('Failed to fetch lessons: ' + err.message);
+    }
+  };
+
+  const fetchStudents = async () => {
+    if (!instructorId) return;
+    try {
+      const response = await apiRequest(API_ENDPOINTS.INSTRUCTOR_STUDENTS(instructorId));
+      setStudents(response.data || []);
+    } catch (err) {
+      setError('Failed to fetch students: ' + err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (instructorId) {
+      fetchLessons();
+      fetchStudents();
+    }
+  }, [instructorId]);
+
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error on input change
+    setError('');
   };
 
-  const handleCreateLesson = (e) => {
+  const handleCreateLesson = async (e) => {
     e.preventDefault();
-    // Simple validation based on the use case's exceptional path
+    setError('');
     if (!form.date || !form.time || !form.student) {
-      setError('Invalid inputs: All fields are required.');
+      setError('All fields are required.');
       return;
     }
 
-    const newLesson = {
-      id: lessons.length + 1,
-      date: form.date,
-      time: form.time,
-      student: form.student,
-      status: 'Scheduled',
-    };
-
-    setLessons([...lessons, newLesson]);
-    setForm({ date: '', time: '', student: '' });
-  };
-
-  const handleEdit = (id) => {
-    setEditingId(id);
-    const lessonToEdit = lessons.find(lesson => lesson.id === id);
-    if (lessonToEdit) {
-      setForm({
-        date: lessonToEdit.date,
-        time: lessonToEdit.time,
-        student: lessonToEdit.student,
+    try {
+      const newLessonData = {
+        ...form,
+        instructor: instructorId,
+        status: 'Scheduled',
+      };
+      const result = await apiRequest('/lessons', {
+        method: 'POST',
+        data: newLessonData,
       });
+      setLessons([...lessons, result.data]);
+      setForm({ date: '', time: '', student: '' });
+    } catch (err) {
+      setError('Failed to create lesson: ' + err.message);
     }
   };
 
-  const handleUpdateLesson = (e) => {
+  const handleEdit = (lesson) => {
+    setEditingId(lesson._id);
+    setForm({
+      date: new Date(lesson.date).toISOString().split('T')[0],
+      time: lesson.time,
+      student: lesson.student._id, // Assuming student is populated with at least _id
+    });
+  };
+
+  const handleUpdateLesson = async (e) => {
     e.preventDefault();
+    setError('');
     if (!form.date || !form.time || !form.student) {
-      setError('Invalid inputs: All fields are required.');
+      setError('All fields are required.');
       return;
     }
 
-    setLessons(lessons.map(lesson =>
-      lesson.id === editingId
-        ? { ...lesson, date: form.date, time: form.time, student: form.student }
-        : lesson
-    ));
-    setEditingId(null);
-    setForm({ date: '', time: '', student: '' });
-  };
-
-  const handleDeleteLesson = (id) => {
-    if (window.confirm("Are you sure you want to delete this lesson?")) {
-      setLessons(lessons.filter(lesson => lesson.id !== id));
+    try {
+      const updatedData = { ...form, instructor: instructorId };
+      const result = await apiRequest(`/lessons/${editingId}`, {
+        method: 'PUT',
+        data: updatedData,
+      });
+      setLessons(lessons.map(lesson => (lesson._id === editingId ? result.data : lesson)));
+      handleCancelEdit();
+    } catch (err) {
+      setError('Failed to update lesson: ' + err.message);
     }
   };
-  
+
+  const handleDeleteLesson = async (id) => {
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      try {
+        await apiRequest(`/lessons/${id}`, { method: 'DELETE' });
+        setLessons(lessons.filter(lesson => lesson._id !== id));
+      } catch (err) {
+        setError('Failed to delete lesson: ' + err.message);
+      }
+    }
+  };
+
   const handleCancelEdit = () => {
     setEditingId(null);
     setForm({ date: '', time: '', student: '' });
@@ -121,14 +156,19 @@ const ManageLessons = () => {
             </div>
             <label>
               Student Name:
-              <input
-                type="text"
+              <select
                 name="student"
                 value={form.student}
                 onChange={handleInputChange}
-                placeholder="e.g., Jane Smith"
                 required
-              />
+              >
+                <option value="">Select a Student</option>
+                {students.map(student => (
+                  <option key={student._id} value={student._id}>
+                    {student.name}
+                  </option>
+                ))}
+              </select>
             </label>
             {error && <p className="error-message">{error}</p>}
             <div className="form-actions">
@@ -149,13 +189,13 @@ const ManageLessons = () => {
           <ul className="lesson-list">
             {lessons.length > 0 ? (
               lessons.map(lesson => (
-                <li key={lesson.id} className={`lesson-item ${lesson.status.toLowerCase()}`}>
+                <li key={lesson._id} className={`lesson-item ${lesson.status.toLowerCase()}`}>
                   <div className="lesson-details">
                     <p className="lesson-info">
-                      <strong>Student:</strong> {lesson.student}
+                      <strong>Student:</strong> {lesson.student?.name || 'N/A'}
                     </p>
                     <p className="lesson-info">
-                      <strong>Date:</strong> {lesson.date}
+                      <strong>Date:</strong> {new Date(lesson.date).toLocaleDateString()}
                     </p>
                     <p className="lesson-info">
                       <strong>Time:</strong> {lesson.time}
@@ -163,10 +203,10 @@ const ManageLessons = () => {
                     <span className="lesson-status">{lesson.status}</span>
                   </div>
                   <div className="lesson-actions">
-                    <button onClick={() => handleEdit(lesson.id)} className="edit-btn">
+                    <button onClick={() => handleEdit(lesson)} className="edit-btn">
                       <Edit size={16} />
                     </button>
-                    <button onClick={() => handleDeleteLesson(lesson.id)} className="delete-btn">
+                    <button onClick={() => handleDeleteLesson(lesson._id)} className="delete-btn">
                       <Trash2 size={16} />
                     </button>
                   </div>

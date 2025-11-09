@@ -1,23 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Filter, MessageCircle, AlertCircle } from 'lucide-react';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 import './ViewFeedback.css';
 
-const ViewFeedback = () => {
-  // Dummy data for feedback - in a real app, this would be fetched from the backend.
-  const allFeedback = [
-    { id: 1, student: 'Jane Smith', course: 'Beginner Lessons', date: '2025-10-18', rating: 5, comment: 'Amazing instructor, very patient and clear!' },
-    { id: 2, student: 'Mike Johnson', course: 'Advanced Training', date: '2025-10-17', rating: 4, comment: 'Good session, but wished we spent more time on parking.' },
-    { id: 3, student: 'Sarah Lee', course: 'Beginner Lessons', date: '2025-10-16', rating: 5, comment: 'Exceeded my expectations. Highly recommended.' },
-    { id: 4, student: 'Chris Miller', course: 'Defensive Driving', date: '2025-10-15', rating: 3, comment: 'The course content was good, but the schedule was a bit rushed.' },
-  ];
-
-  const [feedback, setFeedback] = useState(allFeedback);
+const ViewFeedback = ({ instructorId }) => {
+  const [allFeedback, setAllFeedback] = useState([]);
+  const [filteredFeedback, setFilteredFeedback] = useState([]);
   const [filter, setFilter] = useState({
     course: '',
     date: '',
     student: ''
   });
-  const [showNoFeedbackMessage, setShowNoFeedbackMessage] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchFeedback = async () => {
+    if (!instructorId) return;
+    try {
+      const response = await apiRequest(API_ENDPOINTS.INSTRUCTOR_FEEDBACK(instructorId));
+      setAllFeedback(response.data || []);
+      setFilteredFeedback(response.data || []);
+    } catch (err) {
+      setError('Failed to fetch feedback: ' + err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [instructorId]);
 
   const handleFilterChange = (e) => {
     setFilter({ ...filter, [e.target.name]: e.target.value });
@@ -25,20 +35,19 @@ const ViewFeedback = () => {
 
   const handleApplyFilter = (e) => {
     e.preventDefault();
-    let filteredFeedback = allFeedback;
+    let feedbackToFilter = [...allFeedback];
 
     if (filter.course) {
-      filteredFeedback = filteredFeedback.filter(f => f.course.toLowerCase().includes(filter.course.toLowerCase()));
+      feedbackToFilter = feedbackToFilter.filter(f => f.course?.name.toLowerCase().includes(filter.course.toLowerCase()));
     }
     if (filter.date) {
-      filteredFeedback = filteredFeedback.filter(f => f.date === filter.date);
+      feedbackToFilter = feedbackToFilter.filter(f => new Date(f.createdAt).toISOString().split('T')[0] === filter.date);
     }
     if (filter.student) {
-      filteredFeedback = filteredFeedback.filter(f => f.student.toLowerCase().includes(filter.student.toLowerCase()));
+      feedbackToFilter = feedbackToFilter.filter(f => f.student?.name.toLowerCase().includes(filter.student.toLowerCase()));
     }
 
-    setFeedback(filteredFeedback);
-    setShowNoFeedbackMessage(filteredFeedback.length === 0);
+    setFilteredFeedback(feedbackToFilter);
   };
 
   const renderRatingStars = (rating) => {
@@ -86,24 +95,25 @@ const ViewFeedback = () => {
 
       <div className="feedback-list-card">
         <h2 className="card-title"><MessageCircle size={24} /> Student Feedback</h2>
-        {showNoFeedbackMessage ? (
+        {error && <p className="error-message">{error}</p>}
+        {filteredFeedback.length === 0 && !error ? (
           <div className="no-feedback-message">
             <AlertCircle size={40} />
             <p>No feedback available for the selected filters.</p>
           </div>
         ) : (
           <ul className="feedback-list">
-            {feedback.map(f => (
-              <li key={f.id} className="feedback-item">
+            {filteredFeedback.map(f => (
+              <li key={f._id} className="feedback-item">
                 <div className="feedback-header">
-                  <span className="student-name">{f.student}</span>
+                  <span className="student-name">{f.student?.name || 'Anonymous'}</span>
                   <div className="feedback-rating">
                     {renderRatingStars(f.rating)}
                   </div>
                 </div>
                 <div className="feedback-meta">
-                  <p className="feedback-course">{f.course}</p>
-                  <p className="feedback-date">{f.date}</p>
+                  <p className="feedback-course">{f.course?.name || 'General Feedback'}</p>
+                  <p className="feedback-date">{new Date(f.createdAt).toLocaleDateString()}</p>
                 </div>
                 <p className="feedback-comment">{f.comment}</p>
               </li>

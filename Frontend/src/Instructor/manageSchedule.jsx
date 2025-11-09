@@ -1,70 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircle, Trash2, Copy, AlertCircle } from 'lucide-react';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 import './ManageSchedule.css';
 
-const ManageSchedule = () => {
-  // Dummy data for schedule - in a real app, this would be from the backend
-  const [schedule, setSchedule] = useState([
-    { id: 1, day: 'Monday', startTime: '09:00', endTime: '12:00' },
-    { id: 2, day: 'Wednesday', startTime: '13:00', endTime: '17:00' },
-  ]);
-
+const ManageSchedule = ({ instructorId }) => {
+  const [schedule, setSchedule] = useState([]);
   const [form, setForm] = useState({
     day: 'Monday',
     startTime: '',
     endTime: '',
   });
-
   const [error, setError] = useState('');
+
+  const fetchSchedule = async () => {
+    if (!instructorId) return;
+    try {
+      const response = await apiRequest(API_ENDPOINTS.INSTRUCTOR_SCHEDULE(instructorId));
+      setSchedule(response.data || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedule();
+  }, [instructorId]);
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error on input change
+    setError('');
   };
 
-  const handleAddAvailability = (e) => {
+  const handleAddAvailability = async (e) => {
     e.preventDefault();
+    setError('');
 
     if (!form.startTime || !form.endTime) {
-      setError('Invalid time range entered: Start and end times are required.');
+      setError('Start and end times are required.');
       return;
     }
 
-    // Check for overlapping availability (Exceptional Path)
-    const isOverlapping = schedule.some(slot =>
-      slot.day === form.day &&
-      ((form.startTime >= slot.startTime && form.startTime < slot.endTime) ||
-       (form.endTime > slot.startTime && form.endTime <= slot.endTime))
-    );
-
-    if (isOverlapping) {
-      setError('Overlapping availability already set. Please choose a different time slot.');
+    if (form.startTime >= form.endTime) {
+      setError('End time must be after start time.');
       return;
     }
 
-    const newAvailability = {
-      id: Date.now(),
-      day: form.day,
-      startTime: form.startTime,
-      endTime: form.endTime,
-    };
-
-    setSchedule([...schedule, newAvailability]);
-    setForm({ day: 'Monday', startTime: '', endTime: '' });
+    try {
+      const newSlot = await apiRequest(API_ENDPOINTS.SCHEDULES, {
+        method: 'POST',
+        data: { ...form, instructor: instructorId },
+      });
+      setSchedule([...schedule, newSlot.data]);
+      setForm({ day: 'Monday', startTime: '', endTime: '' });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  const handleDeleteAvailability = (id) => {
-    setSchedule(schedule.filter(slot => slot.id !== id));
+  const handleDeleteAvailability = async (id) => {
+    if (window.confirm('Are you sure you want to delete this availability slot?')) {
+      try {
+        await apiRequest(API_ENDPOINTS.SCHEDULE_BY_ID(id), { method: 'DELETE' });
+        setSchedule(schedule.filter(slot => slot._id !== id));
+      } catch (err) {
+        setError(err.message);
+      }
+    }
   };
 
-  const handleCopyPreviousWeek = () => {
-    // This is the Alternative Path functionality
-    // In a real app, you would fetch last week's data. Here, we'll just duplicate existing data.
-    const copiedSchedule = schedule.map(slot => ({
-      ...slot,
-      id: Date.now() + Math.random(),
-    }));
-    setSchedule([...schedule, ...copiedSchedule]);
+  const handleCopyPreviousWeek = async () => {
+    if (!instructorId) {
+        setError('Instructor ID is not available to copy schedule.');
+        return;
+    }
+    if (window.confirm('This will copy last week\'s schedule and add it to the current one. Proceed?')) {
+        try {
+            const response = await apiRequest(API_ENDPOINTS.COPY_SCHEDULE(instructorId), { method: 'POST' });
+            if (response.data) {
+                // Assuming the backend returns the newly created schedules
+                setSchedule(prev => [...prev, ...response.data]);
+            } else {
+                // As a fallback, just refetch all schedules
+                fetchSchedule();
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
   };
 
   return (
@@ -129,7 +152,7 @@ const ManageSchedule = () => {
           {schedule.length > 0 ? (
             <ul className="schedule-list">
               {schedule.map(slot => (
-                <li key={slot.id} className="schedule-item">
+                <li key={slot._id} className="schedule-item">
                   <div className="slot-details">
                     <p className="slot-info">
                       <strong>Day:</strong> {slot.day}
@@ -138,7 +161,7 @@ const ManageSchedule = () => {
                       <strong>Time:</strong> {slot.startTime} - {slot.endTime}
                     </p>
                   </div>
-                  <button onClick={() => handleDeleteAvailability(slot.id)} className="delete-btn">
+                  <button onClick={() => handleDeleteAvailability(slot._id)} className="delete-btn">
                     <Trash2 size={16} /> Delete
                   </button>
                 </li>

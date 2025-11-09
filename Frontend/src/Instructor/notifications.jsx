@@ -1,60 +1,56 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, AlertCircle, Mail, Calendar, CreditCard } from 'lucide-react';
+import { apiRequest, getCurrentUser } from '../utils/apiHelper';
 import './Notifications.css';
 
 const Notifications = () => {
-  // Dummy data to simulate notifications from the backend
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'lesson',
-      title: 'Lesson Reminder',
-      message: 'Your lesson with Jane Smith is tomorrow at 10:00 AM.',
-      date: '2025-10-19',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'payment',
-      title: 'Payment Alert',
-      message: 'Your monthly payout is ready for processing.',
-      date: '2025-10-18',
-      read: false,
-    },
-    {
-      id: 3,
-      type: 'feedback',
-      title: 'New Feedback',
-      message: 'You have new feedback from a student on your recent lesson.',
-      date: '2025-10-18',
-      read: true,
-    },
-    {
-      id: 4,
-      type: 'cancellation',
-      title: 'Lesson Cancelled',
-      message: 'Mike Johnson cancelled his lesson scheduled for today at 2:30 PM.',
-      date: '2025-10-17',
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [error, setError] = useState('');
 
-  const handleMarkAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
+  const fetchNotifications = async () => {
+    const user = getCurrentUser();
+    if (!user?._id) {
+      setError("You must be logged in to see notifications.");
+      return;
+    }
+    try {
+      const response = await apiRequest(`/notifications/user/${user._id}`);
+      setNotifications(response.notifications || []);
+    } catch (err) {
+      setError('Failed to fetch notifications: ' + err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAsRead = async (id) => {
+    // Optimistically update the UI
+    setNotifications(notifications.map(notification =>
+      notification._id === id ? { ...notification, read: true } : notification
     ));
+    try {
+      await apiRequest(`/notifications/${id}/read`, { method: 'PUT' });
+      // No need to refetch, UI is already updated.
+    } catch (err) {
+      setError('Failed to mark as read: ' + err.message);
+      // Optionally, revert the optimistic update on failure
+      fetchNotifications();
+    }
   };
 
   const getIconForType = (type) => {
     switch (type) {
-      case 'lesson':
+      case 'lesson_booking':
+      case 'lesson_reminder':
         return <Calendar size={24} />;
-      case 'payment':
+      case 'payment_received':
+      case 'payout_processed':
         return <CreditCard size={24} />;
-      case 'feedback':
+      case 'new_feedback':
         return <Mail size={24} />;
-      case 'cancellation':
+      case 'lesson_cancellation':
         return <AlertCircle size={24} />;
       default:
         return <Bell size={24} />;
@@ -71,13 +67,14 @@ const Notifications = () => {
       </div>
 
       <div className="notifications-container">
+        {error && <p className="error-message" style={{ textAlign: 'center' }}>{error}</p>}
         {notifications.length > 0 ? (
           <ul className="notification-list">
             {notifications.map(notification => (
               <li
-                key={notification.id}
+                key={notification._id}
                 className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                onClick={() => handleMarkAsRead(notification.id)}
+                onClick={() => !notification.read && handleMarkAsRead(notification._id)}
               >
                 <div className="notification-icon-container">
                   {getIconForType(notification.type)}
@@ -85,7 +82,7 @@ const Notifications = () => {
                 <div className="notification-content">
                   <h3 className="notification-title">{notification.title}</h3>
                   <p className="notification-message">{notification.message}</p>
-                  <span className="notification-date">{notification.date}</span>
+                  <span className="notification-date">{new Date(notification.createdAt).toLocaleDateString()}</span>
                 </div>
               </li>
             ))}

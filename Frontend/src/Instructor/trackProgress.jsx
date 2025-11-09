@@ -1,64 +1,107 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Clipboard, TrendingUp, AlertCircle, Eye } from 'lucide-react';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 import './TrackProgress.css';
 
-const TrackProgress = () => {
-  // Dummy data for students - in a real app, this would be fetched from the backend.
-  const [students, setStudents] = useState([
-    { id: 1, name: 'Jane Smith', progress: 75, lastLesson: '2025-10-17', assessments: [{ type: 'Theory Test', score: 85 }], history: '...historical data...' },
-    { id: 2, name: 'Mike Johnson', progress: 50, lastLesson: '2025-10-16', assessments: [{ type: 'Driving Skills', score: 60 }], history: '...historical data...' },
-    { id: 3, name: 'Sarah Lee', progress: 90, lastLesson: '2025-10-15', assessments: [{ type: 'Final Exam', score: 95 }], history: '...historical data...' },
-  ]);
-
+const TrackProgress = ({ instructorId }) => {
+  const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [updatedProgress, setUpdatedProgress] = useState({
-    progress: '',
+  const [progressRecord, setProgressRecord] = useState(null);
+  const [form, setForm] = useState({
+    notes: '',
     performanceScore: '',
-    completionPercentage: '',
+    status: 'On Track',
   });
   const [error, setError] = useState('');
 
-  const handleSelectStudent = (student) => {
+  const fetchInstructorStudents = async () => {
+    if (!instructorId) return;
+    try {
+      const res = await apiRequest(API_ENDPOINTS.INSTRUCTOR_STUDENTS(instructorId));
+      setStudents(res.data || []);
+    } catch (err) {
+      setError('Failed to fetch students: ' + err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchInstructorStudents();
+  }, [instructorId]);
+
+  const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
-    setUpdatedProgress({
-      progress: student.progress,
-      performanceScore: '', // Assuming performance score is a new input
-      completionPercentage: student.progress, // Using progress as completion % for this example
-    });
     setError('');
+    try {
+      // Fetch the latest progress record for this student
+      const res = await apiRequest(`/progress/student/${student._id}`);
+      if (res.data && res.data.length > 0) {
+        // Assuming we work with the latest progress record
+        const latestProgress = res.data[0];
+        setProgressRecord(latestProgress);
+        setForm({
+          notes: latestProgress.notes || '',
+          performanceScore: latestProgress.performanceScore || '',
+          status: latestProgress.status || 'On Track',
+        });
+      } else {
+        setProgressRecord(null); // No existing progress record
+        setForm({ notes: '', performanceScore: '', status: 'On Track' });
+      }
+    } catch (err) {
+      setError(`Failed to fetch progress for ${student.name}: ${err.message}`);
+      setProgressRecord(null);
+    }
   };
 
   const handleInputChange = (e) => {
-    setUpdatedProgress({ ...updatedProgress, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleUpdateProgress = (e) => {
+  const handleUpdateProgress = async (e) => {
     e.preventDefault();
     if (!selectedStudent) {
       setError('Please select a student to update.');
       return;
     }
-    
-    // In a real application, this would be an API call to update the student's progress.
-    // Exceptional Path: Handle a potential service/data unavailability error.
+    setError('');
+
+    const progressData = {
+      ...form,
+      student: selectedStudent._id,
+      instructor: instructorId,
+      // Assuming lesson is linked elsewhere or not required for this specific update
+    };
+
     try {
-      // Simulate API call and update the student's data
-      const updatedStudents = students.map(student =>
-        student.id === selectedStudent.id ? { ...student, progress: updatedProgress.completionPercentage } : student
-      );
-      setStudents(updatedStudents);
+      let updatedRecord;
+      if (progressRecord) {
+        // Update existing progress record
+        const res = await apiRequest(`/progress/${progressRecord._id}`, {
+          method: 'PUT',
+          data: progressData,
+        });
+        updatedRecord = res.data;
+      } else {
+        // Create new progress record
+        const res = await apiRequest('/progress', {
+          method: 'POST',
+          data: progressData,
+        });
+        updatedRecord = res.data;
+      }
+      setProgressRecord(updatedRecord);
       alert(`Progress for ${selectedStudent.name} updated successfully!`);
-      setSelectedStudent(null);
-      setUpdatedProgress({ progress: '', performanceScore: '', completionPercentage: '' });
-    } catch (e) {
-      setError('Progress service unavailable. Update queued or error shown.');
+    } catch (err) {
+      setError(`Failed to update progress: ${err.message}`);
     }
   };
 
   const handleReviewHistory = () => {
-    // Alternative Path: Review historical progress records.
     if (selectedStudent) {
-      alert(`Reviewing historical progress for ${selectedStudent.name}:\n\n${selectedStudent.history}`);
+      // In a real app, this would open a modal or navigate to a new page
+      // showing a list of all progress records for the student.
+      alert(`Functionality to show detailed history for ${selectedStudent.name} is not yet implemented.`);
     } else {
       alert('Please select a student to review their history.');
     }
@@ -76,17 +119,18 @@ const TrackProgress = () => {
       <div className="progress-container">
         <div className="student-list-card">
           <h2 className="card-title">Select a Student</h2>
+          {error && !selectedStudent && <p className="error-message">{error}</p>}
           <ul className="student-list">
             {students.map(student => (
-              <li 
-                key={student.id} 
-                className={`student-item ${selectedStudent?.id === student.id ? 'active' : ''}`}
+              <li
+                key={student._id}
+                className={`student-item ${selectedStudent?._id === student._id ? 'active' : ''}`}
                 onClick={() => handleSelectStudent(student)}
               >
                 <div className="user-icon"><User size={20} /></div>
                 <div className="student-details">
                   <p className="student-name">{student.name}</p>
-                  <p className="progress-value">{student.progress}% Completed</p>
+                  {/* Progress value could be fetched and displayed here if needed */}
                 </div>
               </li>
             ))}
@@ -105,7 +149,7 @@ const TrackProgress = () => {
                   <input
                     type="number"
                     name="performanceScore"
-                    value={updatedProgress.performanceScore}
+                    value={form.performanceScore}
                     onChange={handleInputChange}
                     placeholder="e.g., 85"
                   />
@@ -113,24 +157,28 @@ const TrackProgress = () => {
               </div>
               <div className="form-group">
                 <label>
-                  Completion Percentage:
-                  <input
-                    type="number"
-                    name="completionPercentage"
-                    value={updatedProgress.completionPercentage}
+                  Status:
+                  <select name="status" value={form.status} onChange={handleInputChange}>
+                    <option value="On Track">On Track</option>
+                    <option value="Behind Schedule">Behind Schedule</option>
+                    <option value="Needs Improvement">Needs Improvement</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </label>
+              </div>
+              <div className="form-group">
+                <label>
+                  Notes / Feedback:
+                  <textarea
+                    name="notes"
+                    value={form.notes}
                     onChange={handleInputChange}
-                    min="0"
-                    max="100"
-                    required
+                    placeholder="Add notes about the student's performance..."
                   />
                 </label>
               </div>
-              <div className="progress-chart-placeholder">
-                  <p>Lesson Outcome Chart Placeholder</p>
-                  <div className="chart-bar" style={{ width: `${selectedStudent.progress}%` }}></div>
-              </div>
               <div className="form-actions">
-                <button type="submit" className="update-btn"><Clipboard size={18} /> Update Progress</button>
+                <button type="submit" className="update-btn"><Clipboard size={18} /> {progressRecord ? 'Update' : 'Create'} Progress</button>
                 <button type="button" onClick={handleReviewHistory} className="history-btn"><Eye size={18} /> Review History</button>
               </div>
               {error && <p className="error-message"><AlertCircle size={16} /> {error}</p>}

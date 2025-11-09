@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { User, Lock, Mail, Phone, Calendar, MapPin, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './register.css';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 
 function Register() {
   const navigate = useNavigate();
@@ -23,6 +25,8 @@ function Register() {
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Handle input changes
   const handleChange = (e) => {
@@ -81,14 +85,45 @@ function Register() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError('');
     
     if (validateForm()) {
-      // Here you would typically send data to your backend
-      console.log('Form submitted:', formData);
-      alert('Registration successful! Please login with your credentials.');
-      navigate('/login');
+      setIsLoading(true);
+      try {
+        // Prepare data for backend API
+        const userData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          dateOfBirth: formData.dateOfBirth,
+          address: {
+            street: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode
+          },
+          role: 'student' // Default role for registration
+        };
+
+        const response = await apiRequest(API_ENDPOINTS.REGISTER, {
+          method: 'POST',
+          body: JSON.stringify(userData)
+        });
+
+        if (response.success) {
+          alert('Registration successful! Please login with your credentials.');
+          navigate('/login');
+        }
+      } catch (error) {
+        setApiError(error.message || 'Registration failed. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -102,6 +137,19 @@ function Register() {
           <h2 className="register-title">Student Registration</h2>
           <p className="register-subtitle">Join DriveEasy and start your driving journey today</p>
         </div>
+
+        {apiError && (
+          <div className="error-message" style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '10px',
+            borderRadius: '5px',
+            marginBottom: '15px',
+            textAlign: 'center'
+          }}>
+            {apiError}
+          </div>
+        )}
 
         <form className="register-form" onSubmit={handleSubmit}>
           {/* Personal Information Section */}
@@ -278,9 +326,9 @@ function Register() {
             </div>
           </div>
 
-          <button type="submit" className="register-submit-btn">
+          <button type="submit" className="register-submit-btn" disabled={isLoading}>
             <UserCircle size={20} />
-            Create Account
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 

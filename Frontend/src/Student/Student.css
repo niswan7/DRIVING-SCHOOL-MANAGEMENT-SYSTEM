@@ -244,6 +244,35 @@ body {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Card Stats */
+.card-stats {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ff8c00;
+}
  
 .card-footer {
   margin-top: auto; /* Pushes footer to the bottom */
@@ -269,6 +298,8 @@ body {
 .card-action-button:hover {
     background-color: #ff8c00;
     color: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
 }
 
 /* Progress bar */
