@@ -121,6 +121,7 @@
 .form-group {
     display: flex;
     flex-direction: column;
+    padding: 20px;
 }
 
 .form-group label {
@@ -152,8 +153,13 @@
 
 .form-group textarea {
     min-height: 100px;
+    width: 100%;
     resize: vertical;
     font-family: inherit;
+}
+
+.form-group .course_name_txt {
+    width: 80%;
 }
 
 .form-group input:focus,

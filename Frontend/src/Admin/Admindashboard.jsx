@@ -513,7 +513,7 @@ function ManageCoursesView({ navigate }) {
     const [showModal, setShowModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
     const [formData, setFormData] = useState({
-        name: '',
+        title: '',
         description: '',
         duration: '',
         price: '',
@@ -543,7 +543,7 @@ function ManageCoursesView({ navigate }) {
     const handleCreateCourse = () => {
         setEditingCourse(null);
         setFormData({
-            name: '',
+            title: '',
             description: '',
             duration: '',
             price: '',
@@ -555,7 +555,7 @@ function ManageCoursesView({ navigate }) {
     const handleEditCourse = (course) => {
         setEditingCourse(course);
         setFormData({
-            name: course.name || '',
+            title: course.title || '',
             description: course.description || '',
             duration: course.duration || '',
             price: course.price || '',
@@ -643,7 +643,7 @@ function ManageCoursesView({ navigate }) {
                     <tbody>
                         {courses.map(course => (
                             <tr key={course._id}>
-                                <td>{course.name}</td>
+                                <td>{course.title}</td>
                                 <td><span className={`role-badge role-${course.type}`}>{course.type}</span></td>
                                 <td>{course.duration} hours</td>
                                 <td>${course.price}</td>
@@ -670,7 +670,7 @@ function ManageCoursesView({ navigate }) {
                         <form onSubmit={handleSubmitCourse} className="modal-form">
                             <div className="form-group">
                                 <label>Course Name *</label>
-                                <input type="text" name="name" value={formData.name} onChange={handleFormChange} required />
+                                <input type="text" class="course_name_txt" name="title" value={formData.title} onChange={handleFormChange} required />
                             </div>
                             <div className="form-group">
                                 <label>Description *</label>

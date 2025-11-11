@@ -28,22 +28,31 @@ class Course {
      * @returns {Promise<Object>} Created course
      */
     async create(courseData) {
-        const course = {
-            title: courseData.title,
-            description: courseData.description || '',
-            duration: courseData.duration || 0, // in hours
-            price: courseData.price || 0,
-            type: courseData.type || 'beginner', // beginner, intermediate, advanced
-            status: courseData.status || 'active', // active, inactive
-            requirements: courseData.requirements || [],
-            syllabus: courseData.syllabus || [],
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+        try{
+            const course = {
+                title: courseData.title,
+                description: courseData.description || '',
+                duration: courseData.duration || 0, // in hours
+                price: courseData.price || 0,
+                type: courseData.type || 'beginner', // beginner, intermediate, advanced
+                status: courseData.status || 'active', // active, inactive
+                requirements: courseData.requirements || [],
+                syllabus: courseData.syllabus || [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
 
-        const result = await this.collection.insertOne(course);
-        course._id = result.insertedId;
-        return course;
+            const result = await this.collection.insertOne(course);
+            course._id = result.insertedId;
+            return course;
+        }
+        catch(error){
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyPattern)[0];
+                throw new Error(`${field} already exists`);
+            }
+            throw error;
+        }
     }
 
     /**
