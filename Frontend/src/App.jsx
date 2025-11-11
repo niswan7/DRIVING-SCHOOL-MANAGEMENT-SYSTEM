@@ -7,6 +7,8 @@ import StudentFeedback from './Student/studentFeedback.jsx';
 import ViewInstructorFeedback from './Student/viewInstructorFeedback.jsx';
 import InstructorDashboard from './Instructor/instructorDashboard.jsx';
 import AdminDashboard from './Admin/Admindashboard.jsx';
+import TermsOfService from './Legal/termsOfService.jsx';
+import PrivacyPolicy from './Legal/privacyPolicy.jsx';
 import { Route, Routes } from 'react-router-dom'
 function App() {
 
@@ -19,8 +21,10 @@ function App() {
           <Route path='/Student' element={<StudentDashboard/>}/>
           <Route path='/student/feedback' element={<StudentFeedback/>}/>
           <Route path='/student/viewfeedback' element={<ViewInstructorFeedback/>}/>
-          <Route path='/Instructor' element={<InstructorDashboard/>}/>
+          <Route path='/instructor' element={<InstructorDashboard/>}/>
           <Route path='/Admin' element={<AdminDashboard/>}/>
+          <Route path='/terms' element={<TermsOfService/>}/>
+          <Route path='/privacy' element={<PrivacyPolicy/>}/>
     </Routes>
   
 

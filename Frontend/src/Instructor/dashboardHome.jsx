@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Users, Calendar, Clock, BarChart2, MessageSquare, Briefcase, UserCheck } from 'lucide-react';
+import { Award, Users, Calendar, Clock, BarChart2, MessageSquare, Briefcase, UserCheck, ChartLine, Bell, Edit, TrendingUp,ClipboardList } from 'lucide-react';
 import './DashboardHome.css';
 
 const DashboardHome = ({ data, setActivePage }) => {
@@ -44,6 +44,10 @@ const DashboardHome = ({ data, setActivePage }) => {
         <p className="dashboard-description">
           Here's a quick overview of your activities and performance.
         </p>
+        <p className="dashboard-description">
+          Manage your lessons, track student progress, and stay on top of your schedule. 
+          Your dedication shapes the future of safe driving!
+        </p>
       </div>
 
       <div className="dashboard-stats-grid">
@@ -57,24 +61,7 @@ const DashboardHome = ({ data, setActivePage }) => {
         ))}
       </div>
 
-      <div className="dashboard-actions-grid">
-        <div className="action-card" onClick={() => setActivePage('lessons')}>
-          <Briefcase size={50} />
-          <p>Manage Lessons</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('schedule')}>
-          <Calendar size={50} />
-          <p>Update Schedule</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('progress')}>
-          <Users size={50} />
-          <p>Track Student Progress</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('feedback')}>
-          <MessageSquare size={50} />
-          <p>View Feedback</p>
-        </div>
-      </div>
+    
     </div>
   );
 };

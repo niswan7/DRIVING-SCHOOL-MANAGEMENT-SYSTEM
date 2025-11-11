@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, ClipboardList, Calendar, TrendingUp, MessageSquare, Bell, UserCheck, Edit } from 'lucide-react';
 import'./style.css'
-const Sidebar = ({ activePage, setActivePage }) => {
+const Sidebar = ({ activePage, setActivePage, unreadNotificationCount = 0 }) => {
   return (
     <div className="sidebar">
       <h3 className="sidebar-title">Dashboard</h3>
@@ -59,7 +59,12 @@ const Sidebar = ({ activePage, setActivePage }) => {
           className={`sidebar-nav-item ${activePage === 'notifications' ? 'active' : ''}`}
           onClick={() => setActivePage('notifications')}
         >
-          <Bell size={20} />
+          <div className="notification-icon-wrapper">
+            <Bell size={20} />
+            {unreadNotificationCount > 0 && (
+              <span className="notification-badge">{unreadNotificationCount}</span>
+            )}
+          </div>
           <span>Notifications</span>
         </li>
       </ul>

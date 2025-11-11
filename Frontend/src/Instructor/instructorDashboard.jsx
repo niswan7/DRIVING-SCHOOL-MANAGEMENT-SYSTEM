@@ -15,11 +15,12 @@ import Notifications from './notifications.jsx';
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
-  const [activePage, setActivePage] = useState('home');
-  const [instructorData, setInstructorData] = useState(null);
+  const [activePage, setActivePage] = useState('home');
+  const [instructorData, setInstructorData] = useState(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  // A dummy function to simulate fetching instructor data from the backend
-  useEffect(() => {
+  // A dummy function to simulate fetching instructor data from the backend
+  useEffect(() => {
     // In a real application, this would be an API call
     const fetchInstructorData = async () => {
       const dummyData = {
@@ -36,8 +37,13 @@ const InstructorDashboard = () => {
       setInstructorData(dummyData);
     };
 
-    fetchInstructorData();
-  }, []);
+    fetchInstructorData();
+  }, []);
+
+  // Calculate unread notifications count
+  const updateNotificationCount = (count) => {
+    setUnreadNotificationCount(count);
+  };
 
   const renderPage = () => {
     switch (activePage) {
@@ -56,7 +62,7 @@ const InstructorDashboard = () => {
       case 'provide-feedback':
         return <ProvideFeedback />;
       case 'notifications':
-        return <Notifications />;
+        return <Notifications onNotificationCountChange={updateNotificationCount} />;
       default:
         return <DashboardHome data={instructorData} />;
     }

@@ -3,11 +3,33 @@ import { PlusCircle, Edit, Trash2, Save, XCircle } from 'lucide-react';
 import './ManageLessons.css';
 
 const ManageLessons = () => {
+  // Function to convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+  };
+
+  // Function to convert 12-hour time to 24-hour format for input
+  const convertTo24Hour = (time12) => {
+    if (!time12) return '';
+    const match = time12.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return time12;
+    let [, hours, minutes, ampm] = match;
+    hours = parseInt(hours);
+    if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+    if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  };
+
   // Dummy data for lessons - in a real app, this would come from the backend
   const [lessons, setLessons] = useState([
-    { id: 1, date: '2025-10-15', time: '10:00 AM', student: 'Jane Smith', status: 'Scheduled' },
-    { id: 2, date: '2025-10-16', time: '02:30 PM', student: 'Mike Johnson', status: 'Scheduled' },
-    { id: 3, date: '2025-10-17', time: '09:00 AM', student: 'Sarah Lee', status: 'Completed' },
+    { id: 1, date: '2025-10-15', time: '10:00', student: 'Jane Smith', status: 'Scheduled' },
+    { id: 2, date: '2025-10-16', time: '14:30', student: 'Mike Johnson', status: 'Scheduled' },
+    { id: 3, date: '2025-10-17', time: '09:00', student: 'Sarah Lee', status: 'Completed' },
   ]);
 
   const [form, setForm] = useState({
@@ -158,7 +180,7 @@ const ManageLessons = () => {
                       <strong>Date:</strong> {lesson.date}
                     </p>
                     <p className="lesson-info">
-                      <strong>Time:</strong> {lesson.time}
+                      <strong>Time:</strong> {convertTo12Hour(lesson.time)}
                     </p>
                     <span className="lesson-status">{lesson.status}</span>
                   </div>
