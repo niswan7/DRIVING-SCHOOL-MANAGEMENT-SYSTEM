@@ -143,6 +143,103 @@ class LessonService {
         };
         return await this.updateLesson(lessonId, updateData);
     }
+
+    /**
+     * Get instructor availability for a specific date
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} date - Date to check
+     * @returns {Promise<Object>} Available time slots
+     */
+    async getInstructorAvailability(instructorId, date) {
+        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(date).getDay()];
+        
+        console.log('Checking availability for:', {
+            instructorId,
+            date,
+            dayOfWeek
+        });
+        
+        // Get instructor's schedule for this day
+        const schedules = await this.scheduleModel.findByInstructor(instructorId);
+        console.log('All schedules for instructor:', schedules);
+        
+        const daySchedule = schedules.filter(s => s.day === dayOfWeek);
+        console.log('Schedules for', dayOfWeek, ':', daySchedule);
+
+        if (daySchedule.length === 0) {
+            console.log('No schedule found for this day');
+            return { available: false, slots: [] };
+        }
+
+        // Get booked lessons for this date
+        const bookedLessons = await this.lessonModel.getInstructorLessonsForDate(instructorId, date);
+        console.log('Booked lessons for this date:', bookedLessons);
+
+        // Generate available slots
+        const availableSlots = [];
+        for (const schedule of daySchedule) {
+            const slots = this.generateTimeSlots(schedule.startTime, schedule.endTime, bookedLessons);
+            console.log('Generated slots for', schedule.startTime, '-', schedule.endTime, ':', slots);
+            availableSlots.push(...slots);
+        }
+
+        console.log('Final available slots:', availableSlots);
+
+        return {
+            available: availableSlots.length > 0,
+            slots: availableSlots.sort()
+        };
+    }
+
+    /**
+     * Generate time slots from start to end, excluding booked times
+     * @param {String} startTime - Start time (HH:mm)
+     * @param {String} endTime - End time (HH:mm)
+     * @param {Array} bookedLessons - Array of booked lessons
+     * @returns {Array} Available time slots
+     */
+    generateTimeSlots(startTime, endTime, bookedLessons) {
+        const slots = [];
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+        
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+        const slotDuration = 60; // 1 hour slots
+
+        for (let time = startMinutes; time + slotDuration <= endMinutes; time += slotDuration) {
+            const hours = Math.floor(time / 60);
+            const minutes = time % 60;
+            const timeSlot = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+            // Check if this slot conflicts with any booked lesson
+            const hasConflict = bookedLessons.some(lesson => {
+                const [lessonHour, lessonMin] = lesson.time.split(':').map(Number);
+                const lessonStart = lessonHour * 60 + lessonMin;
+                const lessonEnd = lessonStart + (lesson.duration || 60);
+
+                return time < lessonEnd && (time + slotDuration) > lessonStart;
+            });
+
+            if (!hasConflict) {
+                slots.push(timeSlot);
+            }
+        }
+
+        return slots;
+    }
+
+    /**
+     * Check if a time slot is available
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} date - Date
+     * @param {String} time - Time (HH:mm)
+     * @param {Number} duration - Duration in minutes
+     * @returns {Promise<Boolean>} True if available
+     */
+    async checkTimeSlotAvailability(instructorId, date, time, duration = 60) {
+        return await this.lessonModel.isTimeSlotAvailable(instructorId, date, time, duration);
+    }
 }
 
 module.exports = LessonService;

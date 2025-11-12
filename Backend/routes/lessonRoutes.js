@@ -10,9 +10,21 @@ function createLessonRoutes(lessonController) {
     // Create lesson
     router.post('/',
         AuthMiddleware.authenticate,
-        AuthMiddleware.authorize('admin', 'instructor'),
+        AuthMiddleware.authorize('admin', 'instructor', 'student'),
         ValidationMiddleware.validateLessonCreation,
         (req, res) => lessonController.create(req, res)
+    );
+
+    // Check time slot availability
+    router.post('/check-availability',
+        AuthMiddleware.authenticate,
+        (req, res) => lessonController.checkAvailability(req, res)
+    );
+
+    // Get instructor availability for a specific date
+    router.get('/availability/:instructorId/:date',
+        AuthMiddleware.authenticate,
+        (req, res) => lessonController.getAvailability(req, res)
     );
 
     // Get all lessons

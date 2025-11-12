@@ -67,8 +67,15 @@ class AuthMiddleware {
         }
 
         const resourceUserId = req.params.id || req.params.userId || req.params.studentId;
+        const currentUserId = req.user.userId.toString();
         
-        if (req.user.userId.toString() === resourceUserId || req.user.role === 'admin') {
+        console.log('Authorization check:', {
+            currentUserId,
+            resourceUserId,
+            role: req.user.role
+        });
+        
+        if (currentUserId === resourceUserId.toString() || req.user.role === 'admin') {
             next();
         } else {
             res.status(403).json({

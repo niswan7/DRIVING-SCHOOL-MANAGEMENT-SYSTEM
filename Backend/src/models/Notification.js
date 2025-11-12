@@ -64,6 +64,18 @@ class Notification {
     }
 
     /**
+     * Get all notifications (admin only)
+     * @returns {Promise<Array>} Array of all notifications
+     */
+    async findAll() {
+        return await this.collection
+            .find({})
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .toArray();
+    }
+
+    /**
      * Mark notification as read
      * @param {String} id - Notification ID
      * @returns {Promise<Object>} Updated notification

@@ -62,6 +62,15 @@ class PaymentService {
     }
 
     /**
+     * Alias for getAllPayments to match controller naming
+     * @param {Object} filters - Query filters
+     * @returns {Promise<Array>} Array of payments
+     */
+    async findAll(filters = {}) {
+        return await this.getAllPayments(filters);
+    }
+
+    /**
      * Get payment summary for a student
      * @param {String} studentId - Student ID
      * @returns {Promise<Object>} Payment summary
@@ -103,13 +112,22 @@ class PaymentService {
      * @param {Object} paymentDetails - Payment processing details
      * @returns {Promise<Object>} Updated payment
      */
-    async processPayment(paymentId, paymentDetails) {
+    async processPayment(paymentId, paymentDetails = {}) {
         const updateData = {
             status: 'completed',
-            paidAt: new Date(),
-            transactionId: paymentDetails.transactionId,
-            paymentMethod: paymentDetails.paymentMethod
+            paidAt: new Date()
         };
+        
+        // Only update transactionId if provided
+        if (paymentDetails.transactionId) {
+            updateData.transactionId = paymentDetails.transactionId;
+        }
+        
+        // Only update paymentMethod if provided and different
+        if (paymentDetails.paymentMethod) {
+            updateData.paymentMethod = paymentDetails.paymentMethod;
+        }
+        
         return await this.updatePayment(paymentId, updateData);
     }
 

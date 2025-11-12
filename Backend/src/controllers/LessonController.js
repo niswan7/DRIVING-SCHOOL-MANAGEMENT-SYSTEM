@@ -191,6 +191,51 @@ class LessonController {
             });
         }
     }
+
+    /**
+     * Get instructor availability for a specific date
+     * GET /api/lessons/availability/:instructorId/:date
+     */
+    async getAvailability(req, res) {
+        try {
+            const { instructorId, date } = req.params;
+            const availability = await this.lessonService.getInstructorAvailability(instructorId, date);
+            res.status(200).json({
+                success: true,
+                data: availability
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Check time slot availability
+     * POST /api/lessons/check-availability
+     */
+    async checkAvailability(req, res) {
+        try {
+            const { instructorId, date, time, duration } = req.body;
+            const available = await this.lessonService.checkTimeSlotAvailability(
+                instructorId,
+                date,
+                time,
+                duration
+            );
+            res.status(200).json({
+                success: true,
+                data: { available }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = LessonController;

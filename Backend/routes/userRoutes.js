@@ -37,6 +37,12 @@ function createUserRoutes(userController) {
         (req, res) => userController.getInstructorStudents(req, res)
     );
 
+    router.get('/:id/enrolled-courses',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.getEnrolledCourses(req, res)
+    );
+
     router.get('/:id',
         AuthMiddleware.authenticate,
         (req, res) => userController.getById(req, res)
@@ -52,6 +58,18 @@ function createUserRoutes(userController) {
         AuthMiddleware.authenticate,
         AuthMiddleware.authorizeOwnerOrAdmin,
         (req, res) => userController.changePassword(req, res)
+    );
+
+    router.post('/:id/enroll',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.enrollInCourse(req, res)
+    );
+
+    router.post('/:id/unenroll',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.unenrollFromCourse(req, res)
     );
 
     router.delete('/:id',

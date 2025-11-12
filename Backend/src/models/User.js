@@ -52,6 +52,7 @@ class User {
                 },
                 role: userData.role || 'student', // student, instructor, admin
                 status: 'active', // active, inactive, suspended
+                enrolledCourses: [], // Array of course IDs for students
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
@@ -258,6 +259,86 @@ class User {
         }).project({ password: 0 }).toArray();
 
         return students;
+    }
+
+    /**
+     * Enroll a student in a course
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @returns {Promise<Object>} Updated user
+     */
+    async enrollInCourse(userId, courseId) {
+        const user = await this.collection.findOne({ _id: new ObjectId(userId) });
+        
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (user.role !== 'student') {
+            throw new Error('Only students can enroll in courses');
+        }
+
+        const enrolledCourses = user.enrolledCourses || [];
+        
+        if (enrolledCourses.some(id => id.toString() === courseId.toString())) {
+            throw new Error('Already enrolled in this course');
+        }
+
+        const result = await this.collection.findOneAndUpdate(
+            { _id: new ObjectId(userId) },
+            { 
+                $addToSet: { enrolledCourses: new ObjectId(courseId) },
+                $set: { updatedAt: new Date() }
+            },
+            { returnDocument: 'after', projection: { password: 0 } }
+        );
+
+        return result;
+    }
+
+    /**
+     * Unenroll a student from a course
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @returns {Promise<Object>} Updated user
+     */
+    async unenrollFromCourse(userId, courseId) {
+        const result = await this.collection.findOneAndUpdate(
+            { _id: new ObjectId(userId) },
+            { 
+                $pull: { enrolledCourses: new ObjectId(courseId) },
+                $set: { updatedAt: new Date() }
+            },
+            { returnDocument: 'after', projection: { password: 0 } }
+        );
+
+        return result;
+    }
+
+    /**
+     * Get user's enrolled courses with full details
+     * @param {String} userId - User ID
+     * @returns {Promise<Array>} Array of courses
+     */
+    async getEnrolledCoursesWithDetails(userId) {
+        const result = await this.collection.aggregate([
+            { $match: { _id: new ObjectId(userId) } },
+            {
+                $lookup: {
+                    from: 'courses',
+                    localField: 'enrolledCourses',
+                    foreignField: '_id',
+                    as: 'enrolledCoursesDetails'
+                }
+            },
+            {
+                $project: {
+                    enrolledCoursesDetails: 1
+                }
+            }
+        ]).toArray();
+
+        return result.length > 0 ? result[0].enrolledCoursesDetails : [];
     }
 }
 

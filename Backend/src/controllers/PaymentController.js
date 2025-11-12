@@ -59,7 +59,7 @@ class PaymentController {
                 dateFrom: req.query.dateFrom,
                 dateTo: req.query.dateTo
             };
-            const payments = await this.paymentService.getAllPayments(filters);
+            const payments = await this.paymentService.findAll(filters);
             res.status(200).json({
                 success: true,
                 data: payments,

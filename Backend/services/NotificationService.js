@@ -14,37 +14,33 @@ class NotificationService {
      * @returns {Promise<Object>} Created notification
      */
     async createNotification(notificationData) {
-        const { recipient, title, message } = notificationData;
+        const { recipient, title, message, type } = notificationData;
         
         // If recipient is 'all', 'students', or 'instructors', create for multiple users
         if (['all', 'students', 'instructors'].includes(recipient)) {
             let users;
             if (recipient === 'all') {
-                users = await this.userModel.find({});
+                users = await this.userModel.findAll({});
             } else if (recipient === 'students') {
-                users = await this.userModel.find({ role: 'student' });
+                users = await this.userModel.findAll({ role: 'student' });
             } else if (recipient === 'instructors') {
-                users = await this.userModel.find({ role: 'instructor' });
+                users = await this.userModel.findAll({ role: 'instructor' });
             }
             
             // Create notifications for all users
             const notifications = await Promise.all(
                 users.map(user => 
                     this.notificationModel.create({
-                        user: user._id,
+                        userId: user._id,
                         title,
                         message,
-                        type: notificationData.type || 'general',
-                        isRead: false
+                        type: type || 'info'
                     })
                 )
             );
             
-            return { 
-                success: true, 
-                count: notifications.length,
-                message: `Notification sent to ${notifications.length} ${recipient === 'all' ? 'users' : recipient}`
-            };
+            // Return the first notification as a representative
+            return notifications[0] || { title, message, recipient, createdAt: new Date() };
         }
         
         // Single user notification
@@ -66,11 +62,7 @@ class NotificationService {
      * @returns {Promise<Array>} Array of all notifications
      */
     async getAllNotifications() {
-        const notifications = await this.notificationModel.find({})
-            .populate('user', 'firstName lastName email')
-            .sort({ createdAt: -1 })
-            .limit(100);
-        return notifications;
+        return await this.notificationModel.findAll();
     }
 
     /**

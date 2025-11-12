@@ -6,7 +6,9 @@ const { ObjectId } = require('mongodb');
  */
 class Payment {
     constructor(db) {
+        this.db = db;
         this.collection = db.collection('payments');
+        this.usersCollection = db.collection('users');
         this.createIndexes();
     }
 
@@ -96,10 +98,36 @@ class Payment {
             query.createdAt = { ...query.createdAt, $lte: new Date(filters.dateTo) };
         }
 
-        return await this.collection
-            .find(query)
-            .sort({ createdAt: -1 })
-            .toArray();
+        // Use aggregation to populate student details
+        return await this.collection.aggregate([
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'studentId',
+                    foreignField: '_id',
+                    as: 'studentDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$studentDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    studentId: '$studentDetails'
+                }
+            },
+            {
+                $project: {
+                    studentDetails: 0,
+                    'studentId.password': 0 // Exclude password from student data
+                }
+            },
+            { $sort: { createdAt: -1 } }
+        ]).toArray();
     }
 
     /**

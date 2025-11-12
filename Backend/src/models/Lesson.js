@@ -32,6 +32,7 @@ class Lesson {
         const lesson = {
             instructorId: new ObjectId(lessonData.instructorId),
             studentId: lessonData.studentId ? new ObjectId(lessonData.studentId) : null,
+            courseId: lessonData.courseId ? new ObjectId(lessonData.courseId) : null,
             date: new Date(lessonData.date),
             time: lessonData.time,
             duration: lessonData.duration || 60, // Default 60 minutes
@@ -169,6 +170,70 @@ class Lesson {
             })
             .sort({ date: 1, time: 1 })
             .toArray();
+    }
+
+    /**
+     * Get instructor's booked lessons for a specific date
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} date - Date to check
+     * @returns {Promise<Array>} Array of lessons on that date
+     */
+    async getInstructorLessonsForDate(instructorId, date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        return await this.collection
+            .find({
+                instructorId: new ObjectId(instructorId),
+                date: { $gte: startOfDay, $lte: endOfDay },
+                status: { $in: ['scheduled', 'in-progress'] }
+            })
+            .sort({ time: 1 })
+            .toArray();
+    }
+
+    /**
+     * Check if time slot is available
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} date - Date
+     * @param {String} time - Time (HH:mm format)
+     * @param {Number} duration - Duration in minutes
+     * @returns {Promise<Boolean>} True if available
+     */
+    async isTimeSlotAvailable(instructorId, date, time, duration = 60) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const [hours, minutes] = time.split(':').map(Number);
+        const slotStart = hours * 60 + minutes;
+        const slotEnd = slotStart + duration;
+
+        const lessons = await this.collection
+            .find({
+                instructorId: new ObjectId(instructorId),
+                date: { $gte: startOfDay, $lte: endOfDay },
+                status: { $in: ['scheduled', 'in-progress'] }
+            })
+            .toArray();
+
+        for (const lesson of lessons) {
+            const [lessonHours, lessonMinutes] = lesson.time.split(':').map(Number);
+            const lessonStart = lessonHours * 60 + lessonMinutes;
+            const lessonEnd = lessonStart + (lesson.duration || 60);
+
+            // Check for overlap
+            if (slotStart < lessonEnd && slotEnd > lessonStart) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

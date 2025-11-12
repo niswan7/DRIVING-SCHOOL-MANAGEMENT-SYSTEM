@@ -123,6 +123,47 @@ class UserService {
         // modeled if required.
         return await this.userModel.findStudentsByInstructor(instructorId);
     }
+
+    /**
+     * Enroll a student in a course
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @returns {Promise<Object>} Updated user
+     */
+    async enrollInCourse(userId, courseId) {
+        const result = await this.userModel.enrollInCourse(userId, courseId);
+        
+        // Create notification for enrollment
+        if (this.notificationModel && result) {
+            await this.notificationModel.create({
+                userId: result._id,
+                title: 'Course Enrollment Successful',
+                message: 'You have been successfully enrolled in a new course.',
+                type: 'success'
+            });
+        }
+
+        return result;
+    }
+
+    /**
+     * Unenroll a student from a course
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @returns {Promise<Object>} Updated user
+     */
+    async unenrollFromCourse(userId, courseId) {
+        return await this.userModel.unenrollFromCourse(userId, courseId);
+    }
+
+    /**
+     * Get user's enrolled courses with details
+     * @param {String} userId - User ID
+     * @returns {Promise<Array>} Array of courses
+     */
+    async getEnrolledCourses(userId) {
+        return await this.userModel.getEnrolledCoursesWithDetails(userId);
+    }
 }
 
 module.exports = UserService;
