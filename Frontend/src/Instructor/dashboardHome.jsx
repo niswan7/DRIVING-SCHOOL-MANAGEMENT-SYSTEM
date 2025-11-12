@@ -56,25 +56,6 @@ const DashboardHome = ({ data, setActivePage }) => {
           </div>
         ))}
       </div>
-
-      <div className="dashboard-actions-grid">
-        <div className="action-card" onClick={() => setActivePage('lessons')}>
-          <Briefcase size={50} />
-          <p>Manage Lessons</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('schedule')}>
-          <Calendar size={50} />
-          <p>Update Schedule</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('progress')}>
-          <Users size={50} />
-          <p>Track Student Progress</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('feedback')}>
-          <MessageSquare size={50} />
-          <p>View Feedback</p>
-        </div>
-      </div>
     </div>
   );
 };

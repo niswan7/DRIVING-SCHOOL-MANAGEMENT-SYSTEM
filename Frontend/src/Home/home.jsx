@@ -26,7 +26,7 @@ function HOME() {
           <div className="nav-link active" onClick={() => scrollToSection('home')}>Home</div>
           <div className="nav-link" onClick={() => scrollToSection('about')}>About</div>
           <div className="nav-link" onClick={() => scrollToSection('contact')}>Contact</div>
-          <a href="/login" className="nav-link login-btn">Login</a>
+          <a href="/Login" className="nav-link login-btn">Login</a>
         </div>
       </nav>
 
@@ -40,8 +40,8 @@ function HOME() {
             Professional driving instruction with certified instructors. Start your journey to becoming a safe and confident driver today.
           </p>
           <div className="hero-buttons">
-            <a href="/login" className="cta-primary">Book a Lesson</a>
-            <a href="/courses" className="cta-secondary">View Courses</a>
+            <a href="/Login" className="cta-primary">Book a Lesson</a>
+            <a href="/Courses" className="cta-secondary">View Courses</a>
           </div>
         </div>
         <div className="hero-image-grid">
@@ -173,16 +173,16 @@ function HOME() {
             <h4>Quick Links</h4>
             <div className="footer-link" onClick={() => scrollToSection('home')}>Home</div>
             <div className="footer-link" onClick={() => scrollToSection('about')}>About Us</div>
-            <a href="/login" className="footer-link">Login</a>
-            <a href="/courses" className="footer-link">Courses</a>
+            <a href="/Login" className="footer-link">Login</a>
+            <a href="/Courses" className="footer-link">Courses</a>
             <div className="footer-link" onClick={() => scrollToSection('contact')}>Contact</div>
           </div>
           <div className="footer-column">
             <h4>Services</h4>
-            <a href="/courses" className="footer-link">Beginner Lessons</a>
-            <a href="/courses" className="footer-link">Advanced Training</a>
-            <a href="/courses" className="footer-link">Defensive Driving</a>
-            <a href="/login" className="footer-link">Road Test Prep</a>
+            <a href="/Courses" className="footer-link">Beginner Lessons</a>
+            <a href="/Courses" className="footer-link">Advanced Training</a>
+            <a href="/Courses" className="footer-link">Defensive Driving</a>
+            <a href="/Login" className="footer-link">Road Test Prep</a>
           </div>
           <div className="footer-column">
             <h4>Contact Info</h4>
@@ -200,8 +200,8 @@ function HOME() {
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} DriveEasy Driving School. All rights reserved.</p>
           <div className="footer-bottom-links">
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
+            <a href="/Privacy">Privacy Policy</a>
+            <a href="/Terms">Terms of Service</a>
           </div>
         </div>
       </footer>
