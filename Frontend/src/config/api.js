@@ -13,6 +13,9 @@ export const API_ENDPOINTS = {
   USERS_BY_ROLE: (role) => `/users/role/${role}`,
   INSTRUCTOR_STUDENTS: (id) => `/users/instructor/${id}/students`,
   CHANGE_PASSWORD: (id) => `/users/${id}/change-password`,
+  ENROLL_COURSE: (id) => `/users/${id}/enroll`,
+  GET_ENROLLED_COURSES: (id) => `/users/${id}/enrolled-courses`,
+  UNENROLL_COURSE: (id) => `/users/${id}/unenroll`,
   
   // Lessons
   LESSONS: '/lessons',

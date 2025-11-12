@@ -18,6 +18,12 @@ export const apiRequest = async (endpoint, options = {}) => {
     },
   };
 
+  // If there's a data field, convert it to body JSON string
+  if (options.data) {
+    config.body = JSON.stringify(options.data);
+    delete config.data;
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     const data = await response.json();

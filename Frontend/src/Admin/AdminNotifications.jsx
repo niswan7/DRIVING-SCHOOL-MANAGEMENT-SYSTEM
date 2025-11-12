@@ -15,13 +15,31 @@ const AdminNotifications = ({ navigate }) => {
 
     const fetchNotifications = async () => {
         setIsLoading(true);
+        setError('');
         try {
-            // Assuming there's an endpoint to get all notifications for admin
-            const response = await apiRequest(API_ENDPOINTS.NOTIFICATIONS);
-            setNotifications(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            console.log('Fetching notifications from:', API_ENDPOINTS.NOTIFICATIONS);
+            // Fetch all notifications
+            const response = await apiRequest(API_ENDPOINTS.NOTIFICATIONS, {
+                method: 'GET'
+            });
+            console.log('Notifications response:', response);
+            
+            if (response && response.success && response.data) {
+                setNotifications(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            } else if (response && !response.success) {
+                setError(response.message || 'Failed to load notifications.');
+            } else {
+                setNotifications([]);
+            }
         } catch (err) {
-            setError('Failed to load notifications.');
-            console.error(err);
+            const errorMessage = err.message || 'Failed to load notifications. Please try again.';
+            setError(errorMessage);
+            console.error('Fetch notifications error:', err);
+            console.error('Error details:', {
+                message: err.message,
+                status: err.status,
+                response: err.response
+            });
         } finally {
             setIsLoading(false);
         }
@@ -41,16 +59,18 @@ const AdminNotifications = ({ navigate }) => {
         try {
             const response = await apiRequest(API_ENDPOINTS.NOTIFICATIONS, {
                 method: 'POST',
-                data: { title, message, recipient }, // Send recipient type
+                body: JSON.stringify({ title, message, recipient })
             });
-            setNotifications([response.data, ...notifications]);
-            setTitle('');
-            setMessage('');
-            setRecipient('all');
-            alert('Notification sent successfully!');
+            if (response.success && response.data) {
+                setNotifications([response.data, ...notifications]);
+                setTitle('');
+                setMessage('');
+                setRecipient('all');
+                alert('Notification sent successfully!');
+            }
         } catch (err) {
             setFormError('Failed to send notification.');
-            console.error(err);
+            console.error('Send notification error:', err);
         }
     };
 

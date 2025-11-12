@@ -49,7 +49,7 @@ const ManageSchedule = ({ instructorId }) => {
     try {
       const newSlot = await apiRequest(API_ENDPOINTS.SCHEDULES, {
         method: 'POST',
-        data: { ...form, instructor: instructorId },
+        data: { ...form, instructorId: instructorId },
       });
       setSchedule([...schedule, newSlot.data]);
       setForm({ day: 'Monday', startTime: '', endTime: '' });

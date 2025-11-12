@@ -25,14 +25,20 @@ const InstructorDashboard = () => {
 
   useEffect(() => {
     const user = getCurrentUser();
+    console.log('Current user:', user);
     if (user && user.role === 'instructor') {
       setInstructorData(user);
-      fetchDashboardData(user._id);
+      const userId = user._id || user.id;
+      console.log('Fetching dashboard data for instructor:', userId);
+      fetchDashboardData(userId);
+    } else {
+      console.error('User is not an instructor or not logged in');
     }
   }, []);
 
   const fetchDashboardData = async (instructorId) => {
     try {
+      console.log('Fetching dashboard data with instructor ID:', instructorId);
       const [lessonsRes, feedbackRes, ratingRes, studentsRes] = await Promise.all([
         apiRequest(API_ENDPOINTS.UPCOMING_LESSONS_INSTRUCTOR(instructorId)),
         apiRequest(API_ENDPOINTS.INSTRUCTOR_FEEDBACK(instructorId)),
@@ -40,8 +46,15 @@ const InstructorDashboard = () => {
         apiRequest(API_ENDPOINTS.INSTRUCTOR_STUDENTS(instructorId)),
       ]);
 
+      console.log('Dashboard data fetched:', {
+        lessons: lessonsRes,
+        feedback: feedbackRes,
+        rating: ratingRes,
+        students: studentsRes
+      });
+
       setDashboardData({
-        name: instructorData?.name,
+        name: `${instructorData?.firstName || ''} ${instructorData?.lastName || ''}`.trim() || 'Instructor',
         upcomingLessons: lessonsRes.data || [],
         recentFeedback: feedbackRes.data || [],
         averageRating: ratingRes.data?.averageRating || 0,
@@ -49,27 +62,37 @@ const InstructorDashboard = () => {
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      // Set default data even if fetch fails
+      setDashboardData({
+        name: `${instructorData?.firstName || ''} ${instructorData?.lastName || ''}`.trim() || 'Instructor',
+        upcomingLessons: [],
+        recentFeedback: [],
+        averageRating: 0,
+        activeStudents: 0,
+      });
     }
   };
 
   const renderPage = () => {
+    const userId = instructorData?._id || instructorData?.id;
+    
     switch (activePage) {
       case 'home':
-        return <DashboardHome data={dashboardData} />;
+        return <DashboardHome data={dashboardData} setActivePage={setActivePage} />;
       case 'schedule':
-        return <ManageSchedule instructorId={instructorData?._id} />;
+        return <ManageSchedule instructorId={userId} />;
       case 'lessons':
-        return <ManageLessons instructorId={instructorData?._id} />;
+        return <ManageLessons instructorId={userId} />;
       case 'conduct-lessons':
-        return <ConductLessons instructorId={instructorData?._id} />;
+        return <ConductLessons instructorId={userId} />;
       case 'progress':
-        return <TrackProgress instructorId={instructorData?._id} />;
+        return <TrackProgress instructorId={userId} />;
       case 'feedback':
-        return <ViewFeedback instructorId={instructorData?._id} />;
+        return <ViewFeedback instructorId={userId} />;
       case 'notifications':
-        return <Notifications userId={instructorData?._id} />;
+        return <Notifications userId={userId} />;
       default:
-        return <DashboardHome data={dashboardData} />;
+        return <DashboardHome data={dashboardData} setActivePage={setActivePage} />;
     }
   };
 

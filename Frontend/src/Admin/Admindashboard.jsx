@@ -13,6 +13,7 @@ import { API_ENDPOINTS } from '../config/api';
 import OverseeReports from './OverseeReports';
 import AdminFeedback from './AdminFeedback';
 import AdminNotifications from './AdminNotifications';
+import GenerateCertificate from './GenerateCertificate';
 
 function AdminDashboard() {
   const [view, setView] = useState('dashboard'); // 'dashboard', 'manageUsers', 'managePayments', etc.
@@ -41,6 +42,8 @@ function AdminDashboard() {
         return <ManageCoursesView navigate={navigate} />;
       case 'configureNotifications':
         return <AdminNotifications navigate={navigate} />;
+      case 'generateCertificates':
+        return <GenerateCertificate navigate={navigate} />;
       case 'dashboard':
       default:
         return <AdminDashboardView navigate={navigate} />;
@@ -55,6 +58,7 @@ function AdminDashboard() {
         case 'monitorFeedback': return MessageSquare;
         case 'manageCourses': return BookOpen;
         case 'configureNotifications': return Settings;
+        case 'generateCertificates': return FilePlus;
         default: return LayoutDashboard;
     }
   };
@@ -67,6 +71,7 @@ function AdminDashboard() {
         case 'monitorFeedback': return 'Monitor Feedback';
         case 'manageCourses': return 'Manage Courses';
         case 'configureNotifications': return 'Configure Notifications';
+        case 'generateCertificates': return 'Generate Certificates';
         default: return 'Administrator Dashboard';
     }
   };
@@ -122,6 +127,12 @@ function AdminDashboardView({ navigate }) {
         title="Configure Notifications" 
         description="Manage system alerts and notification preferences."
         onClick={() => navigate('configureNotifications')}
+      />
+      <AdminCard 
+        icon={FilePlus} 
+        title="Generate Certificates" 
+        description="Create and download course completion certificates."
+        onClick={() => navigate('generateCertificates')}
       />
       <AdminCard 
         icon={CreditCard} 
@@ -425,10 +436,83 @@ function ManageUsersView({ navigate }) {
 // --- Manage Payments View ---
 function ManagePaymentsView({ navigate }) {
     const [payments, setPayments] = useState([]);
+    const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [editingPayment, setEditingPayment] = useState(null);
+    const [formData, setFormData] = useState({
+        studentId: '',
+        amount: '',
+        paymentMethod: 'cash',
+        status: 'pending',
+        type: 'course',
+        description: ''
+    });
+
+    // Helper function to get student name
+    const getStudentName = (payment) => {
+        if (!payment.studentId) return 'Unknown Student';
+        
+        // If studentId is populated with student object
+        if (typeof payment.studentId === 'object' && payment.studentId.firstName) {
+            return `${payment.studentId.firstName} ${payment.studentId.lastName}`;
+        }
+        
+        // If studentId is just an ObjectId, try to find in students array
+        const student = students.find(s => s._id === payment.studentId);
+        if (student) {
+            return `${student.firstName} ${student.lastName}`;
+        }
+        
+        return 'Unknown Student';
+    };
+
+    // Helper function to format payment type
+    const formatPaymentType = (type) => {
+        const types = {
+            'course': '📚 Course Fee',
+            'lesson': '🚗 Lesson Fee',
+            'fine': '⚠️ Fine',
+            'other': '📝 Other'
+        };
+        
+        if (types[type]) {
+            return types[type];
+        }
+        
+        // Fallback: replace underscores with spaces and title case
+        return type
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
+
+    // Helper function to format payment method
+    const formatPaymentMethod = (method) => {
+        const methods = {
+            'cash': '💵 Cash',
+            'credit_card': '💳 Credit Card',
+            'debit_card': '💳 Debit Card',
+            'bank_transfer': '🏦 Bank Transfer',
+            'online': '🌐 Online'
+        };
+        
+        if (methods[method]) {
+            return methods[method];
+        }
+        
+        // Fallback: replace underscores with spaces and title case
+        return method
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
 
     useEffect(() => {
         fetchPayments();
+        fetchStudents();
     }, []);
 
     const fetchPayments = async () => {
@@ -447,25 +531,136 @@ function ManagePaymentsView({ navigate }) {
         }
     };
 
-    const handleProcessPayment = async (id) => {
+    const fetchStudents = async () => {
         try {
-            const response = await apiRequest(API_ENDPOINTS.PROCESS_PAYMENT(id), {
-                method: 'PUT'
+            const response = await apiRequest(API_ENDPOINTS.USERS, {
+                method: 'GET'
             });
             if (response.success) {
-                alert('Payment processed successfully');
-                fetchPayments();
+                // Filter only students
+                const studentUsers = response.data.filter(user => user.role === 'student');
+                setStudents(studentUsers);
             }
         } catch (error) {
-            alert('Error processing payment: ' + error.message);
+            console.error('Error fetching students:', error.message);
         }
     };
 
+    const handleCreatePayment = () => {
+        setEditingPayment(null);
+        setFormData({
+            studentId: '',
+            amount: '',
+            paymentMethod: 'cash',
+            status: 'pending',
+            type: 'course',
+            description: ''
+        });
+        setShowModal(true);
+    };
+
+    const handleEditPayment = (payment) => {
+        setEditingPayment(payment);
+        // Handle both cases: studentId as ObjectId string or populated object
+        const studentIdValue = typeof payment.studentId === 'object' 
+            ? payment.studentId?._id 
+            : payment.studentId;
+        
+        const editFormData = {
+            studentId: studentIdValue || '',
+            amount: payment.amount || '',
+            paymentMethod: payment.paymentMethod || 'cash',
+            status: payment.status || 'pending',
+            type: payment.type || 'course',
+            description: payment.description || ''
+        };
+        
+        console.log('Edit Payment - Form Data:', editFormData);
+        setFormData(editFormData);
+        setShowModal(true);
+    };
+
+    const handleProcessPayment = async (id) => {
+        if (window.confirm('Mark this payment as completed/paid?')) {
+            try {
+                const response = await apiRequest(API_ENDPOINTS.PROCESS_PAYMENT(id), {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        transactionId: `TXN-${Date.now()}`
+                    })
+                });
+                if (response.success) {
+                    alert('Payment processed successfully');
+                    fetchPayments();
+                }
+            } catch (error) {
+                alert('Error processing payment: ' + error.message);
+            }
+        }
+    };
+
+    const handleDeletePayment = async (id) => {
+        if (window.confirm('Are you sure you want to delete this payment record?')) {
+            try {
+                const response = await apiRequest(API_ENDPOINTS.PAYMENT_BY_ID(id), {
+                    method: 'DELETE'
+                });
+                if (response.success) {
+                    alert('Payment deleted successfully');
+                    fetchPayments();
+                }
+            } catch (error) {
+                alert('Error deleting payment: ' + error.message);
+            }
+        }
+    };
+
+    const handleSubmitPayment = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            if (editingPayment) {
+                const response = await apiRequest(API_ENDPOINTS.PAYMENT_BY_ID(editingPayment._id), {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+                if (response.success) {
+                    alert('Payment updated successfully');
+                    setShowModal(false);
+                    fetchPayments();
+                }
+            } else {
+                const response = await apiRequest(API_ENDPOINTS.PAYMENTS, {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                if (response.success) {
+                    alert('Payment created successfully');
+                    setShowModal(false);
+                    fetchPayments();
+                }
+            }
+        } catch (error) {
+            alert('Error saving payment: ' + error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
     return (
-        <main className="manage-generic-container">
+        <main className="manage-users-container">
             <div className="manage-users-controls">
                 <button className="btn-back" onClick={() => navigate('dashboard')}>
                     <ArrowLeft size={20} /> Back to Dashboard
+                </button>
+                <button className="btn btn-create" onClick={handleCreatePayment}>
+                    <FilePlus size={18} /> Create Payment
                 </button>
             </div>
             {isLoading && <div style={{textAlign: 'center', padding: '20px'}}>Loading...</div>}
@@ -476,32 +671,179 @@ function ManagePaymentsView({ navigate }) {
                         <tr>
                             <th>Student</th>
                             <th>Amount</th>
+                            <th>Type</th>
                             <th>Method</th>
                             <th>Status</th>
                             <th>Date</th>
-                            <th>Actions</th>
+                            <th style={{ textAlign: 'center' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {payments.map(payment => (
                             <tr key={payment._id}>
-                                <td>{payment.studentId?.firstName} {payment.studentId?.lastName}</td>
+                                <td>{getStudentName(payment)}</td>
                                 <td>${payment.amount}</td>
-                                <td>{payment.paymentMethod}</td>
+                                <td>{formatPaymentType(payment.type || 'course')}</td>
+                                <td>{formatPaymentMethod(payment.paymentMethod)}</td>
                                 <td><span className={`status-badge status-${payment.status}`}>{payment.status}</span></td>
-                                <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                                <td>
+                                <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
+                                <td className="actions">
                                     {payment.status === 'pending' && (
                                         <button className="btn btn-create" onClick={() => handleProcessPayment(payment._id)}>
-                                            Process
+                                            <CheckSquare size={16} /> Process
                                         </button>
                                     )}
+                                    <button className="btn btn-delete" onClick={() => handleDeletePayment(payment._id)}>
+                                        <Trash2 size={16} /> Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {/* Payment Modal */}
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal-content payment-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title-wrapper">
+                                <CreditCard size={28} className="modal-icon" />
+                                <h2>{editingPayment ? 'Edit Payment' : 'Create New Payment'}</h2>
+                            </div>
+                            <button className="modal-close" onClick={() => setShowModal(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmitPayment} className="modal-form">
+                            <div className="form-section">
+                                <h3 className="section-title">Student Information</h3>
+                                <div className="form-group">
+                                    <label>
+                                        <Users size={16} className="label-icon" />
+                                        Student *
+                                    </label>
+                                    <select 
+                                        name="studentId" 
+                                        value={formData.studentId} 
+                                        onChange={handleFormChange} 
+                                        required
+                                        disabled={editingPayment}
+                                    >
+                                        <option value="">Select a student</option>
+                                        {students.map(student => (
+                                            <option key={student._id} value={student._id}>
+                                                {student.firstName} {student.lastName} ({student.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {editingPayment && (
+                                        <small style={{color: '#666', fontSize: '0.85em', marginTop: '4px', display: 'block'}}>
+                                            Student cannot be changed for existing payments
+                                        </small>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="form-section">
+                                <h3 className="section-title">Payment Details</h3>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>
+                                            <CreditCard size={16} className="label-icon" />
+                                            Amount ($) *
+                                        </label>
+                                        <div className="input-with-icon">
+                                            <span className="input-prefix">$</span>
+                                            <input 
+                                                type="number" 
+                                                name="amount" 
+                                                value={formData.amount} 
+                                                onChange={handleFormChange} 
+                                                required 
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="amount-input"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>
+                                            <BookOpen size={16} className="label-icon" />
+                                            Payment Type *
+                                        </label>
+                                        <select name="type" value={formData.type} onChange={handleFormChange} required>
+                                            <option value="course">📚 Course Fee</option>
+                                            <option value="lesson">🚗 Lesson Fee</option>
+                                            <option value="fine">⚠️ Fine</option>
+                                            <option value="other">📝 Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>
+                                            <CreditCard size={16} className="label-icon" />
+                                            Payment Method *
+                                        </label>
+                                        <select name="paymentMethod" value={formData.paymentMethod} onChange={handleFormChange} required>
+                                            <option value="cash">💵 Cash</option>
+                                            <option value="credit_card">💳 Credit Card</option>
+                                            <option value="debit_card">💳 Debit Card</option>
+                                            <option value="bank_transfer">🏦 Bank Transfer</option>
+                                            <option value="online">🌐 Online</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>
+                                            <CheckSquare size={16} className="label-icon" />
+                                            Status *
+                                        </label>
+                                        <select name="status" value={formData.status} onChange={handleFormChange} required>
+                                            <option value="pending">⏳ Pending</option>
+                                            <option value="completed">✅ Completed</option>
+                                            <option value="failed">❌ Failed</option>
+                                            <option value="refunded">↩️ Refunded</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>
+                                        <FileText size={16} className="label-icon" />
+                                        Description
+                                    </label>
+                                    <textarea 
+                                        name="description" 
+                                        value={formData.description} 
+                                        onChange={handleFormChange}
+                                        rows="3"
+                                        placeholder="Optional payment description or notes..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="modal-actions">
+                                <button type="button" className="btn btn-cancel" onClick={() => setShowModal(false)}>
+                                    <X size={16} /> Cancel
+                                </button>
+                                <button type="submit" className="btn btn-create" disabled={isLoading}>
+                                    {isLoading ? (
+                                        <>
+                                            <span className="spinner"></span> Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckSquare size={16} /> {editingPayment ? 'Update Payment' : 'Create Payment'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
@@ -513,7 +855,7 @@ function ManageCoursesView({ navigate }) {
     const [showModal, setShowModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
     const [formData, setFormData] = useState({
-        name: '',
+        title: '',
         description: '',
         duration: '',
         price: '',
@@ -543,7 +885,7 @@ function ManageCoursesView({ navigate }) {
     const handleCreateCourse = () => {
         setEditingCourse(null);
         setFormData({
-            name: '',
+            title: '',
             description: '',
             duration: '',
             price: '',
@@ -555,7 +897,7 @@ function ManageCoursesView({ navigate }) {
     const handleEditCourse = (course) => {
         setEditingCourse(course);
         setFormData({
-            name: course.name || '',
+            title: course.title || '',
             description: course.description || '',
             duration: course.duration || '',
             price: course.price || '',
@@ -643,7 +985,7 @@ function ManageCoursesView({ navigate }) {
                     <tbody>
                         {courses.map(course => (
                             <tr key={course._id}>
-                                <td>{course.name}</td>
+                                <td>{course.title}</td>
                                 <td><span className={`role-badge role-${course.type}`}>{course.type}</span></td>
                                 <td>{course.duration} hours</td>
                                 <td>${course.price}</td>
@@ -670,7 +1012,7 @@ function ManageCoursesView({ navigate }) {
                         <form onSubmit={handleSubmitCourse} className="modal-form">
                             <div className="form-group">
                                 <label>Course Name *</label>
-                                <input type="text" name="name" value={formData.name} onChange={handleFormChange} required />
+                                <input type="text" name="title" value={formData.title} onChange={handleFormChange} required />
                             </div>
                             <div className="form-group">
                                 <label>Description *</label>
