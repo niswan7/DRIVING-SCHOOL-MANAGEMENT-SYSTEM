@@ -1,36 +1,128 @@
-// Models live under src/models
-const User = require('../src/models/User');
-
-// This is a mock database for the example.
-// In a real app, this would be in a Repository and talk to a DB.
-const mockUsers = [
-  new User(1, 'Alice', 'alice@example.com'),
-  new User(2, 'Bob', 'bob@example.com'),
-];
-
+/**
+ * User Service
+ * Business logic for user operations
+ */
 class UserService {
-  getAllUsers() {
-    // Business logic (e.g., filtering, mapping) would go here.
-    return mockUsers;
-  }
-
-  getUserById(id) {
-    const user = mockUsers.find((u) => u.id === parseInt(id));
-    if (!user) {
-      throw new Error('User not found');
+    constructor(userModel, notificationModel) {
+        this.userModel = userModel;
+        this.notificationModel = notificationModel;
     }
-    return user;
-  }
 
-  createUser(userData) {
-    const newUser = new User(
-      mockUsers.length + 1,
-      userData.name,
-      userData.email
-    );
-    mockUsers.push(newUser);
-    return newUser;
-  }
+    /**
+     * Register a new user
+     * @param {Object} userData - User data
+     * @returns {Promise<Object>} Created user
+     */
+    async register(userData) {
+        try {
+            const user = await this.userModel.create(userData);
+            
+            // Create welcome notification
+            if (this.notificationModel) {
+                await this.notificationModel.create({
+                    userId: user._id,
+                    title: 'Welcome to Driving School!',
+                    message: `Welcome ${user.firstName}! Your account has been created successfully.`,
+                    type: 'success'
+                });
+            }
+
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Login user
+     * @param {String} identifier - Email or username
+     * @param {String} password - Password
+     * @returns {Promise<Object>} User and token
+     */
+    async login(identifier, password) {
+        return await this.userModel.authenticate(identifier, password);
+    }
+
+    /**
+     * Get user by ID
+     * @param {String} userId - User ID
+     * @returns {Promise<Object>} User object
+     */
+    async getUserById(userId) {
+        const user = await this.userModel.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        delete user.password;
+        return user;
+    }
+
+    /**
+     * Get all users
+     * @param {Object} filters - Query filters
+     * @returns {Promise<Array>} Array of users
+     */
+    async getAllUsers(filters = {}) {
+        return await this.userModel.findAll(filters);
+    }
+
+    /**
+     * Update user profile
+     * @param {String} userId - User ID
+     * @param {Object} updateData - Data to update
+     * @returns {Promise<Object>} Updated user
+     */
+    async updateUser(userId, updateData) {
+        const result = await this.userModel.update(userId, updateData);
+        if (!result) {
+            throw new Error('User not found');
+        }
+        return result;
+    }
+
+    /**
+     * Change user password
+     * @param {String} userId - User ID
+     * @param {String} oldPassword - Current password
+     * @param {String} newPassword - New password
+     */
+    async changePassword(userId, oldPassword, newPassword) {
+        await this.userModel.updatePassword(userId, oldPassword, newPassword);
+    }
+
+    /**
+     * Delete user
+     * @param {String} userId - User ID
+     * @returns {Promise<Boolean>} Success status
+     */
+    async deleteUser(userId) {
+        const deleted = await this.userModel.delete(userId);
+        if (!deleted) {
+            throw new Error('User not found');
+        }
+        return true;
+    }
+
+    /**
+     * Get users by role
+     * @param {String} role - User role
+     * @returns {Promise<Array>} Array of users
+     */
+    async getUsersByRole(role) {
+        return await this.userModel.findAll({ role });
+    }
+
+    /**
+     * Get students assigned to an instructor
+     * @param {String} instructorId - Instructor's ID
+     * @returns {Promise<Array>} Array of student users
+     */
+    async getStudentsByInstructor(instructorId) {
+        // This logic assumes that a student is "assigned" to an instructor
+        // if they have a shared lesson. A more direct relationship could be
+        // modeled if required.
+        return await this.userModel.findStudentsByInstructor(instructorId);
+    }
 }
 
 module.exports = UserService;

@@ -8,7 +8,7 @@ const DashboardHome = ({ data, setActivePage }) => {
     {
       icon: <UserCheck size={40} />,
       title: 'Active Students',
-      value: '52', // Placeholder value
+      value: data?.activeStudents || '0',
       description: 'Currently enrolled and active',
       color: 'blue'
     },
@@ -22,14 +22,14 @@ const DashboardHome = ({ data, setActivePage }) => {
     {
       icon: <BarChart2 size={40} />,
       title: 'Average Rating',
-      value: '4.8/5', // Placeholder value
+      value: `${data?.averageRating?.toFixed(1) || 'N/A'}/5`,
       description: 'Based on student feedback',
       color: 'purple'
     },
     {
       icon: <Clock size={40} />,
       title: 'Hours This Month',
-      value: '45', // Placeholder value
+      value: '45', // This would require more complex calculation
       description: 'Total teaching hours',
       color: 'orange'
     }
@@ -55,25 +55,6 @@ const DashboardHome = ({ data, setActivePage }) => {
             <p className="stat-description">{stat.description}</p>
           </div>
         ))}
-      </div>
-
-      <div className="dashboard-actions-grid">
-        <div className="action-card" onClick={() => setActivePage('lessons')}>
-          <Briefcase size={50} />
-          <p>Manage Lessons</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('schedule')}>
-          <Calendar size={50} />
-          <p>Update Schedule</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('progress')}>
-          <Users size={50} />
-          <p>Track Student Progress</p>
-        </div>
-        <div className="action-card" onClick={() => setActivePage('feedback')}>
-          <MessageSquare size={50} />
-          <p>View Feedback</p>
-        </div>
       </div>
     </div>
   );

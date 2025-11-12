@@ -106,23 +106,31 @@
 
 .form-group {
   position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.form-group:focus-within {
+  border-color: #ff8c00; /* Primary Orange */
+  box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
 }
 
 .form-group .input-icon {
-  position: absolute;
-  top: 50%;
-  left: 18px;
-  transform: translateY(-50%);
+  padding-left: 1rem;
   color: #94a3b8; /* Slate Gray */
   pointer-events: none; /* Make icon unclickable */
 }
 
 .login-input {
   width: 100%;
-  padding: 1rem 1rem 1rem 3rem; /* Left padding for icon */
-  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  background: transparent;
   color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
   border-radius: 12px;
   font-size: 1rem;
   box-sizing: border-box;
@@ -135,9 +143,6 @@
 
 .login-input:focus {
   outline: none;
-  border-color: #ff8c00; /* Primary Orange */
-  background: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
 }
 
 .login-submit-btn {

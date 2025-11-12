@@ -2,27 +2,49 @@ import React, { useState } from 'react'; // 1. Import useState
 import { User, Lock, Car, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './login.css'; 
+import { apiRequest, saveAuth } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 
 function Login() {
   // 2. Create state to store username and password from input fields
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   // 3. Create a function to handle form submission
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     // Prevent the page from reloading on form submission
     event.preventDefault(); 
-    
-    // Check the credentials stored in the state
-    if (username === "admin" && password === "12345") {
-        navigate('/admin');
-    } else if (username === "instructor" && password === "12345") {
-        navigate('/instructor');
-    } else if (username === "student" && password === "12345") {
-        navigate('/Student');
-    } else {
-        alert("Invalid credentials");
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // Call backend API for login
+      const response = await apiRequest(API_ENDPOINTS.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.success) {
+        // Save user and token to localStorage
+        saveAuth(response.data.user, response.data.token);
+
+        // Navigate based on user role
+        const role = response.data.user.role.toLowerCase();
+        if (role === 'admin') {
+          navigate('/admin');
+        } else if (role === 'instructor') {
+          navigate('/instructor');
+        } else if (role === 'student') {
+          navigate('/Student');
+        }
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid credentials. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,6 +58,19 @@ function Login() {
           <h2 className="login-title">DriveEasy Login</h2>
           <p className="login-subtitle">Access your Student, Instructor, or Admin portal</p>
         </div>
+
+        {error && (
+          <div className="error-message" style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '10px',
+            borderRadius: '5px',
+            marginBottom: '15px',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
 
         {/* 4. Use the onSubmit event on the form */}
         <form className="login-form" onSubmit={handleLogin}>
@@ -68,9 +103,9 @@ function Login() {
           </div>
 
           {/* This button now correctly submits the form */}
-          <button type="submit" className="login-submit-btn">
+          <button type="submit" className="login-submit-btn" disabled={isLoading}>
             <LogIn size={20} />
-            Log In Securely
+            {isLoading ? 'Logging in...' : 'Log In Securely'}
           </button>
         </form>
 
