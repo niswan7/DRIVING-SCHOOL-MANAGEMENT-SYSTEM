@@ -1,18 +1,96 @@
 const express = require('express');
 const router = express.Router();
+const AuthMiddleware = require('../src/middleware/authMiddleware');
+const ValidationMiddleware = require('../src/middleware/validationMiddleware');
 
-// Import the classes
-const UserService = require('../services/UserService');
-// Controller lives under src/controllers
-const UserController = require('../src/controllers/UserController');
+/**
+ * User Routes
+ * Note: These routes will be initialized with dependencies in app.js
+ */
+function createUserRoutes(userController) {
+    // Public routes
+    router.post('/register', 
+        ValidationMiddleware.validateUserRegistration,
+        (req, res) => userController.register(req, res)
+    );
+    
+    router.post('/login',
+        ValidationMiddleware.validateUserLogin,
+        (req, res) => userController.login(req, res)
+    );
 
-// Instantiate them
-const userService = new UserService();
-const userController = new UserController(userService);
+    // Protected routes - require authentication
+    router.get('/',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorize('admin'),
+        (req, res) => userController.getAll(req, res)
+    );
 
-// Define the routes and map them to controller methods
-router.get('/users', (req, res) => userController.getAll(req, res));
-router.get('/users/:id', (req, res) => userController.getById(req, res));
-router.post('/users', (req, res) => userController.create(req, res));
+    router.get('/role/:role',
+        AuthMiddleware.authenticate,
+        (req, res) => userController.getByRole(req, res)
+    );
 
-module.exports = router;
+    router.get('/instructor/:instructorId/students',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorize('instructor', 'admin'),
+        (req, res) => userController.getInstructorStudents(req, res)
+    );
+
+    router.get('/instructor/:instructorId/student/:studentId/enrolled-courses',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorize('instructor', 'admin'),
+        (req, res) => userController.getStudentEnrolledCourses(req, res)
+    );
+
+    router.get('/:id/enrolled-courses',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.getEnrolledCourses(req, res)
+    );
+
+    router.get('/:id',
+        AuthMiddleware.authenticate,
+        (req, res) => userController.getById(req, res)
+    );
+
+    router.put('/:id',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.update(req, res)
+    );
+
+    router.post('/:id/change-password',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.changePassword(req, res)
+    );
+
+    router.post('/:id/enroll',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.enrollInCourse(req, res)
+    );
+
+    router.post('/:id/unenroll',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorizeOwnerOrAdmin,
+        (req, res) => userController.unenrollFromCourse(req, res)
+    );
+
+    router.post('/:id/complete-course',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorize('instructor', 'admin'),
+        (req, res) => userController.markCourseComplete(req, res)
+    );
+
+    router.delete('/:id',
+        AuthMiddleware.authenticate,
+        AuthMiddleware.authorize('admin'),
+        (req, res) => userController.delete(req, res)
+    );
+
+    return router;
+}
+
+module.exports = createUserRoutes;

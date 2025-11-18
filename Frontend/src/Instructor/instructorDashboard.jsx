@@ -1,75 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import Header from "./header.jsx";
 import Sidebar from "./sidebar.jsx";
+import { apiRequest, getCurrentUser } from '../utils/apiHelper.js';
+import { API_ENDPOINTS } from '../config/api.js';
 
 // Import all the instructor pages
 import DashboardHome from './dashboardHome.jsx';
-import ManageLessons from './manageLesson.jsx';
-import ManageSchedule from './manageSchedule.jsx';
-import ConductLessons from './conductLesson.jsx';
-import TrackProgress from './trackProgress.jsx';
+import ManageLesson from './manageLesson';
+import ManageSchedule from './manageSchedule';
+import ConductLessons from './conductLesson';
+import ManageAssessments from './ManageAssessments';
+import ManageStudentProgress from './ManageStudentProgress';
 import ViewFeedback from './viewFeedback.jsx';
 import Notifications from './notifications.jsx';
 
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
-  const [activePage, setActivePage] = useState('home');
-  const [instructorData, setInstructorData] = useState(null);
+  const [activePage, setActivePage] = useState('home');
+  const [instructorData, setInstructorData] = useState(null);
+  const [dashboardData, setDashboardData] = useState({
+    upcomingLessons: [],
+    recentFeedback: []
+  });
 
-  // A dummy function to simulate fetching instructor data from the backend
-  useEffect(() => {
-    // In a real application, this would be an API call
-    const fetchInstructorData = async () => {
-      const dummyData = {
-        name: 'John Doe',
-        avatar: 'path/to/avatar.jpg',
-        upcomingLessons: [
-          { id: 1, student: 'Alice', time: '10:00 AM' },
-          { id: 2, student: 'Bob', time: '02:00 PM' }
-        ],
-        recentFeedback: [
-          { id: 1, student: 'Charlie', rating: 5, comment: 'Great lesson!' }
-        ]
-      };
-      setInstructorData(dummyData);
-    };
+  useEffect(() => {
+    const user = getCurrentUser();
+    console.log('Current user:', user);
+    if (user && user.role === 'instructor') {
+      setInstructorData(user);
+      const userId = user._id || user.id;
+      console.log('Fetching dashboard data for instructor:', userId);
+      fetchDashboardData(userId);
+    } else {
+      console.error('User is not an instructor or not logged in');
+    }
+  }, []);
 
-    fetchInstructorData();
-  }, []);
+  const fetchDashboardData = async (instructorId) => {
+    try {
+      console.log('Fetching dashboard data with instructor ID:', instructorId);
+      const [lessonsRes, feedbackRes, ratingRes, studentsRes, hoursRes] = await Promise.all([
+        apiRequest(API_ENDPOINTS.UPCOMING_LESSONS_INSTRUCTOR(instructorId)),
+        apiRequest(API_ENDPOINTS.INSTRUCTOR_FEEDBACK(instructorId)),
+        apiRequest(API_ENDPOINTS.INSTRUCTOR_RATING(instructorId)),
+        apiRequest(API_ENDPOINTS.INSTRUCTOR_STUDENTS(instructorId)),
+        apiRequest(API_ENDPOINTS.INSTRUCTOR_MONTHLY_HOURS(instructorId)),
+      ]);
 
-  const renderPage = () => {
-    switch (activePage) {
-      case 'home':
-        return <DashboardHome data={instructorData} />;
-      case 'schedule':
-        return <ManageSchedule />;
-      case 'lessons':
-        return <ManageLessons />;
+      console.log('Dashboard data fetched:', {
+        lessons: lessonsRes,
+        feedback: feedbackRes,
+        rating: ratingRes,
+        students: studentsRes,
+        hours: hoursRes
+      });
+
+      setDashboardData({
+        name: `${instructorData?.firstName || ''} ${instructorData?.lastName || ''}`.trim() || 'Instructor',
+        upcomingLessons: lessonsRes.data || [],
+        recentFeedback: feedbackRes.data || [],
+        averageRating: ratingRes.data?.averageRating || 0,
+        activeStudents: studentsRes.data?.length || 0,
+        monthlyHours: hoursRes.data?.totalHours || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Set default data even if fetch fails
+      setDashboardData({
+        name: `${instructorData?.firstName || ''} ${instructorData?.lastName || ''}`.trim() || 'Instructor',
+        upcomingLessons: [],
+        recentFeedback: [],
+        averageRating: 0,
+        activeStudents: 0,
+        monthlyHours: 0,
+      });
+    }
+  };
+
+  const renderPage = () => {
+    const userId = instructorData?._id || instructorData?.id;
+    
+    switch (activePage) {
+      case 'home':
+        return <DashboardHome data={dashboardData} setActivePage={setActivePage} />;
+      case 'schedule':
+        return <ManageSchedule instructorId={userId} />;
+      case 'lessons':
+        return <ManageLesson instructorId={userId} />;
       case 'conduct-lessons':
-        return <ConductLessons />;
-      case 'progress':
-        return <TrackProgress />;
-      case 'feedback':
-        return <ViewFeedback />;
+        return <ConductLessons instructorId={userId} />;
+      case 'assessments':
+        return <ManageAssessments instructorId={userId} />;
+      case 'progress':
+        return <ManageStudentProgress instructorId={userId} />;
+      case 'feedback':
+        return <ViewFeedback instructorId={userId} />;
       case 'notifications':
-        return <Notifications />;
-      default:
-        return <DashboardHome data={instructorData} />;
-    }
-  };
+        return <Notifications userId={userId} />;
+      default:
+        return <DashboardHome data={dashboardData} setActivePage={setActivePage} />;
+    }
+  };
 
-  return (
-    <div className="instructor-dashboard-container">
-      <Header instructorName={instructorData?.name} />
-      <div className="main-layout">
-        <Sidebar setActivePage={setActivePage} activePage={activePage} />
-        <div className="content-area">
-          {renderPage()}
-        </div>
-      </div>
-    </div>
-  );
+  return (
+    <div className="instructor-dashboard-container">
+      <Header instructorName={`${instructorData?.firstName} ${instructorData?.lastName}`} />
+      <div className="main-layout">
+        <Sidebar setActivePage={setActivePage} activePage={activePage} />
+        <div className="content-area">
+          {instructorData ? renderPage() : <p>Loading...</p>}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default InstructorDashboard;

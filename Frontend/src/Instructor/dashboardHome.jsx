@@ -8,7 +8,7 @@ const DashboardHome = ({ data, setActivePage }) => {
     {
       icon: <UserCheck size={40} />,
       title: 'Active Students',
-      value: '52', // Placeholder value
+      value: data?.activeStudents || '0',
       description: 'Currently enrolled and active',
       color: 'blue'
     },
@@ -22,14 +22,14 @@ const DashboardHome = ({ data, setActivePage }) => {
     {
       icon: <BarChart2 size={40} />,
       title: 'Average Rating',
-      value: '4.8/5', // Placeholder value
+      value: `${data?.averageRating?.toFixed(1) || 'N/A'}/5`,
       description: 'Based on student feedback',
       color: 'purple'
     },
     {
       icon: <Clock size={40} />,
       title: 'Hours This Month',
-      value: '45', // Placeholder value
+      value: data?.monthlyHours || '0',
       description: 'Total teaching hours',
       color: 'orange'
     }
