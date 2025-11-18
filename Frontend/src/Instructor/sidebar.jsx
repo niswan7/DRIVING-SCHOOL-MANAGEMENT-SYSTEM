@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, ClipboardList, Calendar, TrendingUp, MessageSquare, Bell, UserCheck } from 'lucide-react';
+import { Home, ClipboardList, Calendar, TrendingUp, MessageSquare, Bell, UserCheck, FileText } from 'lucide-react';
 import'./style.css'
 const Sidebar = ({ activePage, setActivePage }) => {
   return (
@@ -35,11 +35,18 @@ const Sidebar = ({ activePage, setActivePage }) => {
           <span>Conduct Lessons</span>
         </li>
         <li 
+          className={`sidebar-nav-item ${activePage === 'assessments' ? 'active' : ''}`}
+          onClick={() => setActivePage('assessments')}
+        >
+          <FileText size={20} />
+          <span>Assessments</span>
+        </li>
+        <li 
           className={`sidebar-nav-item ${activePage === 'progress' ? 'active' : ''}`}
           onClick={() => setActivePage('progress')}
         >
           <TrendingUp size={20} />
-          <span>Track Progress</span>
+          <span>Manage Student Progress</span>
         </li>
         <li 
           className={`sidebar-nav-item ${activePage === 'feedback' ? 'active' : ''}`}

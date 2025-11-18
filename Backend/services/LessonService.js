@@ -151,24 +151,26 @@ class LessonService {
      * @returns {Promise<Object>} Available time slots
      */
     async getInstructorAvailability(instructorId, date) {
-        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(date).getDay()];
-        
         console.log('Checking availability for:', {
             instructorId,
-            date,
-            dayOfWeek
+            date
         });
         
-        // Get instructor's schedule for this day
-        const schedules = await this.scheduleModel.findByInstructor(instructorId);
-        console.log('All schedules for instructor:', schedules);
+        // First, try to get date-specific schedules
+        let schedules = await this.scheduleModel.findByInstructorAndDate(instructorId, date);
+        console.log('Date-specific schedules:', schedules);
         
-        const daySchedule = schedules.filter(s => s.day === dayOfWeek);
-        console.log('Schedules for', dayOfWeek, ':', daySchedule);
+        // If no date-specific schedules, fall back to day-of-week schedules (backward compatibility)
+        if (!schedules || schedules.length === 0) {
+            const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(date).getDay()];
+            const allSchedules = await this.scheduleModel.findByInstructor(instructorId);
+            schedules = allSchedules.filter(s => s.day === dayOfWeek && !s.date);
+            console.log('Day-of-week schedules for', dayOfWeek, ':', schedules);
+        }
 
-        if (daySchedule.length === 0) {
-            console.log('No schedule found for this day');
-            return { available: false, slots: [] };
+        if (schedules.length === 0) {
+            console.log('No schedule found for this date');
+            return { available: false, slots: [], fullyBooked: false };
         }
 
         // Get booked lessons for this date
@@ -177,17 +179,29 @@ class LessonService {
 
         // Generate available slots
         const availableSlots = [];
-        for (const schedule of daySchedule) {
+        let totalSlots = 0;
+        
+        for (const schedule of schedules) {
             const slots = this.generateTimeSlots(schedule.startTime, schedule.endTime, bookedLessons);
             console.log('Generated slots for', schedule.startTime, '-', schedule.endTime, ':', slots);
+            
+            // Calculate total possible slots
+            const [startHour, startMin] = schedule.startTime.split(':').map(Number);
+            const [endHour, endMin] = schedule.endTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            totalSlots += Math.floor((endMinutes - startMinutes) / 60);
+            
             availableSlots.push(...slots);
         }
 
         console.log('Final available slots:', availableSlots);
+        console.log('Total possible slots:', totalSlots);
 
         return {
             available: availableSlots.length > 0,
-            slots: availableSlots.sort()
+            slots: availableSlots.sort(),
+            fullyBooked: totalSlots > 0 && availableSlots.length === 0
         };
     }
 
@@ -239,6 +253,25 @@ class LessonService {
      */
     async checkTimeSlotAvailability(instructorId, date, time, duration = 60) {
         return await this.lessonModel.isTimeSlotAvailable(instructorId, date, time, duration);
+    }
+
+    /**
+     * Update lesson attendance
+     * @param {String} lessonId - Lesson ID
+     * @param {String} attendance - Attendance status ('attended', 'not-attended')
+     * @returns {Promise<Object>} Updated lesson
+     */
+    async updateAttendance(lessonId, attendance) {
+        if (!['attended', 'not-attended'].includes(attendance)) {
+            throw new Error('Invalid attendance status. Must be "attended" or "not-attended"');
+        }
+
+        const result = await this.lessonModel.updateAttendance(lessonId, attendance);
+        if (!result) {
+            throw new Error('Lesson not found');
+        }
+
+        return result;
     }
 }
 

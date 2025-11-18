@@ -50,7 +50,7 @@ function createPaymentRoutes(paymentController) {
     // Process payment
     router.post('/:id/process',
         AuthMiddleware.authenticate,
-        AuthMiddleware.authorize('admin'),
+        AuthMiddleware.authorize('admin', 'student'),
         (req, res) => paymentController.process(req, res)
     );
 

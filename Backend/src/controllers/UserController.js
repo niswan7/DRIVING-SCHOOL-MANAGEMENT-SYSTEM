@@ -192,6 +192,39 @@ class UserController {
     }
 
     /**
+     * Get enrolled courses for a student (accessed by their instructor)
+     * GET /api/users/instructor/:instructorId/student/:studentId/enrolled-courses
+     */
+    async getStudentEnrolledCourses(req, res) {
+        try {
+            const { instructorId, studentId } = req.params;
+            
+            // Verify the student is assigned to this instructor
+            const students = await this.userService.getStudentsByInstructor(instructorId);
+            const isInstructorStudent = students.some(student => student._id.toString() === studentId);
+            
+            if (!isInstructorStudent) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'You can only access courses for your assigned students'
+                });
+            }
+            
+            const courses = await this.userService.getEnrolledCourses(studentId);
+            res.status(200).json({
+                success: true,
+                data: courses,
+                count: courses.length
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    /**
      * Enroll a student in a course
      * POST /api/users/:id/enroll
      */
@@ -224,6 +257,27 @@ class UserController {
                 success: true,
                 data: user,
                 message: 'Successfully unenrolled from course'
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Mark a course as completed for a student
+     * POST /api/users/:id/complete-course
+     */
+    async markCourseComplete(req, res) {
+        try {
+            const { courseId, instructorId } = req.body;
+            const user = await this.userService.markCourseComplete(req.params.id, courseId, instructorId);
+            res.status(200).json({
+                success: true,
+                data: user,
+                message: 'Course marked as completed successfully'
             });
         } catch (error) {
             res.status(400).json({

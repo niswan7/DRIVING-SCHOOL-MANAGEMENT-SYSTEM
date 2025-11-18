@@ -146,6 +146,63 @@
   padding: 2rem 0;
 }
 
+.lesson-details {
+  padding: 1rem 0;
+}
+
+.lesson-details p {
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  margin-bottom: 0.5rem;
+}
+
+.lesson-details strong {
+  color: #ff9800;
+  margin-right: 0.5rem;
+}
+
+.assessments-preview {
+  padding: 0.5rem 0;
+}
+
+.section-label {
+  color: #ff9800;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assessment-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid #ff9800;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.assessment-title {
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.assessment-due {
+  color: #b0b0b0;
+  font-size: 0.85rem;
+}
+
+.more-info {
+  color: #ff9800;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
 .card-description {
   color: #b0b0b0;
   font-size: 0.95rem;
@@ -187,11 +244,49 @@
 }
 
 /* Payment Amount */
+.payment-label {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .payment-amount {
   font-size: 2.5rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 1rem;
+}
+
+.payment-status {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 0.95rem;
+}
+
+.no-pending-payments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 1rem;
+}
+
+.no-pending-payments .check-icon {
+  width: 64px;
+  height: 64px;
+  stroke: #22c55e;
+  stroke-width: 2;
+}
+
+.no-pending-payments p {
+  font-size: 1.1rem;
+  color: #22c55e;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* Notifications */

@@ -1,38 +1,107 @@
-import React, { useState } from 'react';
-import { CheckCircle, XCircle, Slash, Calendar, User, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Play, Clock, Calendar, User } from 'lucide-react';
+import { apiRequest } from '../utils/apiHelper';
+import { API_ENDPOINTS } from '../config/api';
 import './ConductLessons.css';
 
-const ConductLessons = () => {
-  // Dummy data for scheduled lessons
-  const [lessons, setLessons] = useState([
-    { id: 1, date: '2025-10-15', time: '10:00 AM', student: 'Jane Smith', status: 'Scheduled' },
-    { id: 2, date: '2025-10-16', time: '02:30 PM', student: 'Mike Johnson', status: 'Scheduled' },
-    { id: 3, date: '2025-10-17', time: '09:00 AM', student: 'Sarah Lee', status: 'Scheduled' },
-  ]);
+const ConductLessons = ({ instructorId }) => {
+  const [upcomingLessons, setUpcomingLessons] = useState([]);
+  const [activeLessons, setActiveLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleCompleteLesson = (id) => {
-    // Basic Path: Lesson marked as completed, attendance recorded
-    setLessons(lessons.map(lesson =>
-      lesson.id === id ? { ...lesson, status: 'Completed' } : lesson
-    ));
-    alert('Lesson marked as completed for ' + lessons.find(l => l.id === id).student);
-    // In a real app, this would send an API request to the backend.
+  useEffect(() => {
+    if (instructorId) {
+      fetchUpcomingLessons();
+    }
+  }, [instructorId]);
+
+  const fetchUpcomingLessons = async () => {
+    try {
+      setLoading(true);
+      const res = await apiRequest(API_ENDPOINTS.UPCOMING_BOOKINGS_INSTRUCTOR(instructorId));
+      console.log('Upcoming lessons:', res.data);
+      
+      const all = res.data || [];
+      // Filter to only show scheduled/confirmed lessons
+      const upcoming = all.filter(lesson => 
+        lesson.status === 'scheduled' || lesson.status === 'confirmed'
+      );
+      
+      setUpcomingLessons(upcoming);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch lessons: ' + err.message);
+      setLoading(false);
+    }
   };
 
-  const handleMarkAsMissed = (id) => {
-    // Exceptional Path: Student absent -> Lesson marked "Missed"
-    setLessons(lessons.map(lesson =>
-      lesson.id === id ? { ...lesson, status: 'Missed' } : lesson
-    ));
-    alert('Lesson marked as missed for ' + lessons.find(l => l.id === id).student);
+  const handleStartLesson = async (lesson) => {
+    try {
+      // Update status to in-progress
+      await apiRequest(`/bookings/${lesson._id}`, {
+        method: 'PUT',
+        data: { status: 'in-progress' }
+      });
+      
+      // Move to active lessons
+      setActiveLessons([...activeLessons, { ...lesson, status: 'in-progress' }]);
+      setUpcomingLessons(upcomingLessons.filter(l => l._id !== lesson._id));
+    } catch (err) {
+      alert('Failed to start lesson: ' + err.message);
+    }
   };
-  
-  const handleMarkAsCancelled = (id) => {
-      // Exceptional Path: Instructor unavailable -> Lesson marked "Cancelled"
-      setLessons(lessons.map(lesson =>
-          lesson.id === id ? { ...lesson, status: 'Cancelled' } : lesson
-      ));
-      alert('Lesson marked as cancelled for ' + lessons.find(l => l.id === id).student);
+
+  const handleMarkAbsent = async (lesson) => {
+    if (!window.confirm(`Mark ${lesson.studentId?.firstName || 'student'} as absent?`)) {
+      return;
+    }
+    
+    try {
+      await apiRequest(`/bookings/${lesson._id}`, {
+        method: 'PUT',
+        data: { 
+          status: 'missed',
+          attendance: 'absent'
+        }
+      });
+      
+      // Remove from upcoming
+      setUpcomingLessons(upcomingLessons.filter(l => l._id !== lesson._id));
+      alert('Student marked as absent');
+    } catch (err) {
+      alert('Failed to mark as absent: ' + err.message);
+    }
+  };
+
+  const handleCompleteLesson = async (lesson) => {
+    if (!window.confirm(`Mark lesson with ${lesson.studentId?.firstName || 'student'} as completed?`)) {
+      return;
+    }
+    
+    try {
+      await apiRequest(`/bookings/${lesson._id}`, {
+        method: 'PUT',
+        data: { 
+          status: 'completed',
+          attendance: 'attended'
+        }
+      });
+      
+      // Remove from active lessons
+      setActiveLessons(activeLessons.filter(l => l._id !== lesson._id));
+      alert('Lesson marked as completed');
+    } catch (err) {
+      alert('Failed to complete lesson: ' + err.message);
+    }
+  };
+
+  const getStudentName = (lesson) => {
+    if (lesson.studentId?.name) return lesson.studentId.name;
+    if (lesson.studentId?.firstName && lesson.studentId?.lastName) {
+      return `${lesson.studentId.firstName} ${lesson.studentId.lastName}`;
+    }
+    return lesson.studentId?.firstName || 'N/A';
   };
 
   return (
@@ -40,63 +109,87 @@ const ConductLessons = () => {
       <div className="section-header">
         <h1 className="section-title">Conduct Lessons</h1>
         <p className="section-subtitle">
-          Select a scheduled lesson to mark its status and record attendance.
+          Start scheduled lessons, mark attendance, and complete sessions.
         </p>
       </div>
 
-      <div className="lessons-list-card">
-        <h2 className="card-title">Scheduled Lessons</h2>
-        <ul className="lessons-list">
-          {lessons.length > 0 ? (
-            lessons.map(lesson => (
-              <li key={lesson.id} className={`lesson-item lesson-status-${lesson.status.toLowerCase()}`}>
+      {error && <p className="error-message">{error}</p>}
+
+      {/* Active Lessons - In Progress */}
+      {activeLessons.length > 0 && (
+        <div className="lessons-list-card active-card">
+          <h2 className="card-title">Active Lessons</h2>
+          <ul className="lessons-list">
+            {activeLessons.map(lesson => (
+              <li key={lesson._id} className="lesson-item lesson-active">
                 <div className="lesson-details">
                   <p className="lesson-info">
-                    <User size={16} /> <strong>Student:</strong> {lesson.student}
+                    <User size={16} /> <strong>Student:</strong> {getStudentName(lesson)}
                   </p>
                   <p className="lesson-info">
-                    <Calendar size={16} /> <strong>Date:</strong> {lesson.date}
+                    <Calendar size={16} /> <strong>Date:</strong> {new Date(lesson.date).toLocaleDateString()}
                   </p>
                   <p className="lesson-info">
                     <Clock size={16} /> <strong>Time:</strong> {lesson.time}
                   </p>
                 </div>
                 <div className="lesson-actions">
-                  {lesson.status === 'Scheduled' && (
-                    <>
-                      <button 
-                        onClick={() => handleCompleteLesson(lesson.id)} 
-                        className="action-btn complete-btn"
-                        title="Mark as Completed"
-                      >
-                        <CheckCircle size={20} />
-                      </button>
-                      <button 
-                        onClick={() => handleMarkAsMissed(lesson.id)} 
-                        className="action-btn missed-btn"
-                        title="Mark as Missed (Student Absent)"
-                      >
-                        <XCircle size={20} />
-                      </button>
-                      <button
-                        onClick={() => handleMarkAsCancelled(lesson.id)}
-                        className="action-btn cancel-btn"
-                        title="Mark as Cancelled (Instructor Unavailable)"
-                      >
-                        <Slash size={20} />
-                      </button>
-                    </>
-                  )}
-                  {lesson.status !== 'Scheduled' && (
-                      <span className={`status-badge ${lesson.status.toLowerCase()}`}>{lesson.status}</span>
-                  )}
+                  <button 
+                    onClick={() => handleCompleteLesson(lesson)} 
+                    className="action-btn complete-btn"
+                    title="Mark as Completed"
+                  >
+                    <CheckCircle size={20} /> Complete
+                  </button>
                 </div>
               </li>
-            ))
-          ) : (
-            <p className="no-lessons-msg">No lessons scheduled to conduct.</p>
-          )}
-        </ul>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Upcoming Lessons */}
+      <div className="lessons-list-card">
+        <h2 className="card-title">Upcoming Lessons</h2>
+        {loading ? (
+          <p className="no-lessons-msg">Loading...</p>
+        ) : upcomingLessons.length > 0 ? (
+          <ul className="lessons-list">
+            {upcomingLessons.map(lesson => (
+              <li key={lesson._id} className="lesson-item lesson-scheduled">
+                <div className="lesson-details">
+                  <p className="lesson-info">
+                    <User size={16} /> <strong>Student:</strong> {getStudentName(lesson)}
+                  </p>
+                  <p className="lesson-info">
+                    <Calendar size={16} /> <strong>Date:</strong> {new Date(lesson.date).toLocaleDateString()}
+                  </p>
+                  <p className="lesson-info">
+                    <Clock size={16} /> <strong>Time:</strong> {lesson.time}
+                  </p>
+                </div>
+                <div className="lesson-actions">
+                  <button 
+                    onClick={() => handleStartLesson(lesson)} 
+                    className="action-btn start-btn"
+                    title="Start Lesson"
+                  >
+                    <Play size={20} /> Start
+                  </button>
+                  <button 
+                    onClick={() => handleMarkAbsent(lesson)} 
+                    className="action-btn absent-btn"
+                    title="Mark Student as Absent"
+                  >
+                    <XCircle size={20} /> Absent
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="no-lessons-msg">No upcoming lessons scheduled.</p>
+        )}
       </div>
     </div>
   );

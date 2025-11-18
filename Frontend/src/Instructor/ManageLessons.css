@@ -39,12 +39,6 @@
   margin: 0 auto;
 }
 
-@media (min-width: 768px) {
-  .card-container {
-    grid-template-columns: 1fr 1.5fr;
-  }
-}
-
 .manage-form-card,
 .manage-list-card {
   background: rgba(255, 255, 255, 0.05);
@@ -102,7 +96,8 @@
   color: #ffffff;
 }
 
-.lesson-form input {
+.lesson-form input,
+.lesson-form select {
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -114,10 +109,16 @@
   transition: all 0.3s ease;
 }
 
-.lesson-form input:focus {
+.lesson-form input:focus,
+.lesson-form select:focus {
   outline: none;
   border-color: #ff8c00;
   box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
+}
+
+.lesson-form select option {
+  background-color: #222;
+  color: #fff;
 }
 
 .form-actions {

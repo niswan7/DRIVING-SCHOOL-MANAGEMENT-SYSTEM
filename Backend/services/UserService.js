@@ -157,6 +157,34 @@ class UserService {
     }
 
     /**
+     * Mark a course as completed for a student
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @param {String} instructorId - Instructor ID
+     * @returns {Promise<Object>} Updated user
+     */
+    async markCourseComplete(userId, courseId, instructorId) {
+        const result = await this.userModel.markCourseComplete(userId, courseId, instructorId);
+        
+        // Create notification for course completion
+        if (this.notificationModel && result) {
+            const { ObjectId } = require('mongodb');
+            const courseData = await this.userModel.db.collection('courses').findOne({ _id: new ObjectId(courseId) });
+            const courseName = courseData?.name || courseData?.title || 'Course';
+            
+            await this.notificationModel.create({
+                userId: new ObjectId(userId),
+                title: 'Course Completed!',
+                message: `Congratulations! You have successfully completed ${courseName}.`,
+                type: 'achievement',
+                read: false
+            });
+        }
+        
+        return result;
+    }
+
+    /**
      * Get user's enrolled courses with details
      * @param {String} userId - User ID
      * @returns {Promise<Array>} Array of courses

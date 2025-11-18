@@ -29,7 +29,7 @@ const DashboardHome = ({ data, setActivePage }) => {
     {
       icon: <Clock size={40} />,
       title: 'Hours This Month',
-      value: '45', // This would require more complex calculation
+      value: data?.monthlyHours || '0',
       description: 'Total teaching hours',
       color: 'orange'
     }

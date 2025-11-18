@@ -4,89 +4,95 @@ const AuthMiddleware = require('../src/middleware/authMiddleware');
 const ValidationMiddleware = require('../src/middleware/validationMiddleware');
 
 /**
- * Lesson Routes
+ * Booking Routes
  */
-function createLessonRoutes(lessonController) {
-    // Create lesson
+function createBookingRoutes(bookingController) {
+    // Create booking
     router.post('/',
         AuthMiddleware.authenticate,
         AuthMiddleware.authorize('admin', 'instructor', 'student'),
-        ValidationMiddleware.validateLessonCreation,
-        (req, res) => lessonController.create(req, res)
+        ValidationMiddleware.validateBookingCreation,
+        (req, res) => bookingController.create(req, res)
     );
 
     // Check time slot availability
     router.post('/check-availability',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.checkAvailability(req, res)
+        (req, res) => bookingController.checkAvailability(req, res)
     );
 
     // Get instructor availability for a specific date
     router.get('/availability/:instructorId/:date',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.getAvailability(req, res)
+        (req, res) => bookingController.getAvailability(req, res)
     );
 
-    // Get all lessons
+    // Get all bookings
     router.get('/',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.getAll(req, res)
+        (req, res) => bookingController.getAll(req, res)
     );
 
-    // Get upcoming lessons for instructor
+    // Get upcoming bookings for instructor
     router.get('/instructor/:instructorId/upcoming',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.getUpcomingForInstructor(req, res)
+        (req, res) => bookingController.getUpcomingForInstructor(req, res)
     );
 
-    // Get upcoming lessons for student
+    // Get upcoming bookings for student
     router.get('/student/:studentId/upcoming',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.getUpcomingForStudent(req, res)
+        (req, res) => bookingController.getUpcomingForStudent(req, res)
     );
 
-    // Get all lessons for an instructor
+    // Get all bookings for an instructor
     router.get('/instructor/:instructorId',
         AuthMiddleware.authenticate,
         AuthMiddleware.authorize('instructor', 'admin'),
-        (req, res) => lessonController.getInstructorLessons(req, res)
+        (req, res) => bookingController.getInstructorBookings(req, res)
     );
 
-    // Get lesson by ID
+    // Get monthly teaching hours for instructor
+    router.get('/instructor/:instructorId/monthly-hours',
+        AuthMiddleware.authenticate,
+        (req, res) => bookingController.getMonthlyHours(req, res)
+    );
+
+    // Get booking by ID
     router.get('/:id',
         AuthMiddleware.authenticate,
-        (req, res) => lessonController.getById(req, res)
+        (req, res) => bookingController.getById(req, res)
     );
 
-    // Update lesson
+    // Update booking
     router.put('/:id',
         AuthMiddleware.authenticate,
-        AuthMiddleware.authorize('admin', 'instructor'),
-        (req, res) => lessonController.update(req, res)
+        AuthMiddleware.authorize('admin', 'instructor', 'student'),
+        (req, res) => bookingController.update(req, res)
     );
 
-    // Complete lesson
+    // Complete booking
     router.post('/:id/complete',
         AuthMiddleware.authenticate,
         AuthMiddleware.authorize('instructor'),
-        (req, res) => lessonController.complete(req, res)
+        (req, res) => bookingController.complete(req, res)
     );
 
-    // Update lesson attendance
+    // Update booking attendance
     router.patch('/:id/attendance',
         AuthMiddleware.authenticate,
         AuthMiddleware.authorize('instructor', 'admin'),
-        (req, res) => lessonController.updateAttendance(req, res)
+        (req, res) => bookingController.updateAttendance(req, res)
     );
 
-    // Delete lesson
+    // Delete booking
     router.delete('/:id',
         AuthMiddleware.authenticate,
         AuthMiddleware.authorize('admin', 'instructor'),
-        (req, res) => lessonController.delete(req, res)
+        (req, res) => bookingController.delete(req, res)
     );
 
     return router;
 }
 
-module.exports = createLessonRoutes;
+module.exports = createBookingRoutes;

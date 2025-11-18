@@ -16,6 +16,30 @@
 .section-header {
   text-align: center;
   margin-bottom: 3rem;
+  position: relative;
+}
+
+.mark-all-read-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 2px solid #ff8c00;
+  color: #ff8c00;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mark-all-read-btn:hover {
+  background: #ff8c00;
+  color: #0f0f0f;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
 }
 
 .section-title {

@@ -16,7 +16,7 @@ class ScheduleService {
         // Check for overlapping schedules
         const hasOverlap = await this.scheduleModel.checkOverlap(
             scheduleData.instructorId,
-            scheduleData.day,
+            scheduleData.date || scheduleData.day,
             scheduleData.startTime,
             scheduleData.endTime
         );
@@ -51,6 +51,27 @@ class ScheduleService {
     }
 
     /**
+     * Get instructor schedules by date range
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} startDate - Start date
+     * @param {Date} endDate - End date
+     * @returns {Promise<Array>} Array of schedule slots
+     */
+    async getInstructorScheduleByDateRange(instructorId, startDate, endDate) {
+        return await this.scheduleModel.findByInstructorAndDateRange(instructorId, startDate, endDate);
+    }
+
+    /**
+     * Get instructor schedule for a specific date
+     * @param {String} instructorId - Instructor ID
+     * @param {Date} date - Specific date
+     * @returns {Promise<Array>} Array of schedule slots
+     */
+    async getInstructorScheduleByDate(instructorId, date) {
+        return await this.scheduleModel.findByInstructorAndDate(instructorId, date);
+    }
+
+    /**
      * Update schedule
      * @param {String} scheduleId - Schedule ID
      * @param {Object} updateData - Data to update
@@ -58,7 +79,7 @@ class ScheduleService {
      */
     async updateSchedule(scheduleId, updateData) {
         // If updating time slots, check for overlap
-        if (updateData.day || updateData.startTime || updateData.endTime) {
+        if (updateData.day || updateData.date || updateData.startTime || updateData.endTime) {
             const existing = await this.scheduleModel.findById(scheduleId);
             if (!existing) {
                 throw new Error('Schedule not found');
@@ -66,7 +87,7 @@ class ScheduleService {
 
             const hasOverlap = await this.scheduleModel.checkOverlap(
                 existing.instructorId,
-                updateData.day || existing.day,
+                updateData.date || updateData.day || existing.date || existing.day,
                 updateData.startTime || existing.startTime,
                 updateData.endTime || existing.endTime,
                 scheduleId

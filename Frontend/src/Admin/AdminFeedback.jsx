@@ -68,8 +68,12 @@ const AdminFeedback = ({ navigate }) => {
                         <div key={item._id} className="feedback-item-admin">
                             <div className="feedback-item-header">
                                 <div className="feedback-author">
-                                    <strong>{item.student?.name || 'Anonymous'}</strong>
-                                    <span>on course: {item.course?.name || 'N/A'}</span>
+                                    <strong>
+                                        {item.student?.firstName && item.student?.lastName
+                                            ? `${item.student.firstName} ${item.student.lastName}`
+                                            : item.student?.name || item.student?.email || 'Anonymous'}
+                                    </strong>
+                                    <span>on course: {item.course?.name || item.course?.title || 'N/A'}</span>
                                 </div>
                                 <div className="feedback-rating-admin">
                                     {renderRatingStars(item.rating)}
@@ -77,7 +81,11 @@ const AdminFeedback = ({ navigate }) => {
                             </div>
                             <p className="feedback-comment-admin">"{item.comment}"</p>
                             <div className="feedback-meta-admin">
-                                <span>Instructor: {item.instructor?.name || 'N/A'}</span>
+                                <span>Instructor: {
+                                    item.instructor?.firstName && item.instructor?.lastName
+                                        ? `${item.instructor.firstName} ${item.instructor.lastName}`
+                                        : item.instructor?.name || item.instructor?.email || 'N/A'
+                                }</span>
                                 <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                                 <button onClick={() => handleDelete(item._id)} className="btn-delete-feedback">
                                     <Trash2 size={16} />

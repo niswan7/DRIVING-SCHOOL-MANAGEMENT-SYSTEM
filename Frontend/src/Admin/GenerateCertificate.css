@@ -26,15 +26,16 @@
 }
 
 .certificate-form-section {
-  background: white;
+  background: #252525;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .certificate-form-section h2 {
-  color: #1f2937;
+  color: #ffffff;
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
@@ -49,7 +50,7 @@
 
 .form-group label {
   display: block;
-  color: #374151;
+  color: #e2e8f0;
   font-weight: 500;
   margin-bottom: 0.5rem;
 }
@@ -57,22 +58,24 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: #1a1a1a;
+  color: #ffffff;
 }
 
 .form-group select:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #ff8c00;
+  box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
 }
 
 .form-group select:disabled {
-  background: #f3f4f6;
+  background: #333333;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .certificate-preview-section {

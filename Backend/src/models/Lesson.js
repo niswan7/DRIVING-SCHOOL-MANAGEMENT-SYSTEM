@@ -1,12 +1,12 @@
 const { ObjectId } = require('mongodb');
 
 /**
- * Lesson Model
- * Handles lesson data operations
+ * Booking Model
+ * Handles booking data operations
  */
-class Lesson {
+class Booking {
     constructor(db) {
-        this.collection = db.collection('lessons');
+        this.collection = db.collection('bookings');
         this.createIndexes();
     }
 
@@ -24,44 +24,45 @@ class Lesson {
     }
 
     /**
-     * Create a new lesson
-     * @param {Object} lessonData - Lesson data
-     * @returns {Promise<Object>} Created lesson
+     * Create a new booking
+     * @param {Object} bookingData - Booking data
+     * @returns {Promise<Object>} Created booking
      */
-    async create(lessonData) {
-        const lesson = {
-            instructorId: new ObjectId(lessonData.instructorId),
-            studentId: lessonData.studentId ? new ObjectId(lessonData.studentId) : null,
-            courseId: lessonData.courseId ? new ObjectId(lessonData.courseId) : null,
-            date: new Date(lessonData.date),
-            time: lessonData.time,
-            duration: lessonData.duration || 60, // Default 60 minutes
-            type: lessonData.type || 'practical', // practical, theory
-            status: lessonData.status || 'scheduled', // scheduled, completed, cancelled, in-progress
-            notes: lessonData.notes || '',
-            location: lessonData.location || '',
+    async create(bookingData) {
+        const booking = {{
+            instructorId: new ObjectId(bookingData.instructorId),
+            studentId: bookingData.studentId ? new ObjectId(bookingData.studentId) : null,
+            courseId: bookingData.courseId ? new ObjectId(bookingData.courseId) : null,
+            date: new Date(bookingData.date),
+            time: bookingData.time,
+            duration: bookingData.duration || 60, // Default 60 minutes
+            type: bookingData.type || 'practical', // practical, theory
+            status: bookingData.status || 'scheduled', // scheduled, completed, cancelled, in-progress
+            attendance: bookingData.attendance || null, // null, 'attended', 'not-attended'
+            notes: bookingData.notes || '',
+            location: bookingData.location || '',
             createdAt: new Date(),
             updatedAt: new Date()
         };
 
-        const result = await this.collection.insertOne(lesson);
-        lesson._id = result.insertedId;
-        return lesson;
+        const result = await this.collection.insertOne(booking);
+        booking._id = result.insertedId;
+        return booking;
     }
 
     /**
-     * Find lesson by ID
-     * @param {String} id - Lesson ID
-     * @returns {Promise<Object>} Lesson object
+     * Find booking by ID
+     * @param {String} id - Booking ID
+     * @returns {Promise<Object>} Booking object
      */
     async findById(id) {
         return await this.collection.findOne({ _id: new ObjectId(id) });
     }
 
     /**
-     * Get lessons with filters
+     * Get bookings with filters
      * @param {Object} filters - Query filters
-     * @returns {Promise<Array>} Array of lessons
+     * @returns {Promise<Array>} Array of bookings
      */
     async findAll(filters = {}) {
         const query = {};
@@ -86,19 +87,19 @@ class Lesson {
             query.date = { ...query.date, $lte: new Date(filters.dateTo) };
         }
 
-        const lessons = await this.collection
+        const bookings = await this.collection
             .find(query)
             .sort({ date: -1, time: 1 })
             .toArray();
 
-        return lessons;
+        return bookings;
     }
 
     /**
-     * Update lesson
-     * @param {String} id - Lesson ID
+     * Update booking
+     * @param {String} id - Booking ID
      * @param {Object} updateData - Data to update
-     * @returns {Promise<Object>} Updated lesson
+     * @returns {Promise<Object>} Updated booking
      */
     async update(id, updateData) {
         const updates = { ...updateData };
@@ -127,8 +128,8 @@ class Lesson {
     }
 
     /**
-     * Delete lesson
-     * @param {String} id - Lesson ID
+     * Delete booking
+     * @param {String} id - Booking ID
      * @returns {Promise<Boolean>} Success status
      */
     async delete(id) {
@@ -137,9 +138,30 @@ class Lesson {
     }
 
     /**
-     * Get upcoming lessons for instructor
+     * Update booking attendance
+     * @param {String} id - Booking ID
+     * @param {String} attendance - Attendance status ('attended', 'not-attended')
+     * @returns {Promise<Object>} Updated booking
+     */
+    async updateAttendance(id, attendance) {
+        const result = await this.collection.findOneAndUpdate(
+            { _id: new ObjectId(id) },
+            { 
+                $set: { 
+                    attendance: attendance,
+                    updatedAt: new Date()
+                } 
+            },
+            { returnDocument: 'after' }
+        );
+
+        return result;
+    }
+
+    /**
+     * Get upcoming bookings for instructor
      * @param {String} instructorId - Instructor ID
-     * @returns {Promise<Array>} Array of upcoming lessons
+     * @returns {Promise<Array>} Array of upcoming bookings
      */
     async getUpcomingByInstructor(instructorId) {
         const now = new Date();
@@ -155,9 +177,9 @@ class Lesson {
     }
 
     /**
-     * Get upcoming lessons for student
+     * Get upcoming bookings for student
      * @param {String} studentId - Student ID
-     * @returns {Promise<Array>} Array of upcoming lessons
+     * @returns {Promise<Array>} Array of upcoming bookings
      */
     async getUpcomingByStudent(studentId) {
         const now = new Date();
@@ -173,10 +195,10 @@ class Lesson {
     }
 
     /**
-     * Get instructor's booked lessons for a specific date
+     * Get instructor's bookings for a specific date
      * @param {String} instructorId - Instructor ID
      * @param {Date} date - Date to check
-     * @returns {Promise<Array>} Array of lessons on that date
+     * @returns {Promise<Array>} Array of bookings on that date
      */
     async getInstructorLessonsForDate(instructorId, date) {
         const startOfDay = new Date(date);
@@ -214,7 +236,7 @@ class Lesson {
         const slotStart = hours * 60 + minutes;
         const slotEnd = slotStart + duration;
 
-        const lessons = await this.collection
+        const bookings = await this.collection
             .find({
                 instructorId: new ObjectId(instructorId),
                 date: { $gte: startOfDay, $lte: endOfDay },
@@ -222,10 +244,10 @@ class Lesson {
             })
             .toArray();
 
-        for (const lesson of lessons) {
-            const [lessonHours, lessonMinutes] = lesson.time.split(':').map(Number);
-            const lessonStart = lessonHours * 60 + lessonMinutes;
-            const lessonEnd = lessonStart + (lesson.duration || 60);
+        for (const booking of bookings) {
+            const [bookingHours, bookingMinutes] = booking.time.split(':').map(Number);
+            const bookingStart = bookingHours * 60 + bookingMinutes;
+            const bookingEnd = bookingStart + (booking.duration || 60);
 
             // Check for overlap
             if (slotStart < lessonEnd && slotEnd > lessonStart) {
@@ -237,4 +259,4 @@ class Lesson {
     }
 }
 
-module.exports = Lesson;
+module.exports = Booking;

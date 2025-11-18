@@ -43,9 +43,9 @@ class ValidationMiddleware {
     ];
 
     /**
-     * Lesson creation validation
+     * Booking creation validation
      */
-    static validateLessonCreation = [
+    static validateBookingCreation = [
         body('instructorId').trim().notEmpty().withMessage('Instructor ID is required'),
         body('date').isISO8601().withMessage('Valid date is required'),
         body('time').trim().notEmpty().withMessage('Time is required'),
@@ -58,10 +58,18 @@ class ValidationMiddleware {
      */
     static validateScheduleCreation = [
         body('instructorId').trim().notEmpty().withMessage('Instructor ID is required'),
-        body('day').isIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+        body('day').optional().isIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
             .withMessage('Valid day is required'),
+        body('date').optional().isISO8601().withMessage('Valid date is required'),
         body('startTime').trim().notEmpty().withMessage('Start time is required'),
         body('endTime').trim().notEmpty().withMessage('End time is required'),
+        // Custom validation: either day or date must be provided
+        body().custom((value, { req }) => {
+            if (!req.body.day && !req.body.date) {
+                throw new Error('Either day or date must be provided');
+            }
+            return true;
+        }),
         this.handleValidationErrors
     ];
 

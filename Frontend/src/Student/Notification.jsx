@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../config/api';
 import './Pages.css';
 
 const Notifications = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all, read, unread
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchNotifications();
@@ -13,55 +15,92 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      // Replace with actual API call
-      // const response = await fetch('/api/notifications');
-      // const data = await response.json();
-      // setNotifications(data);
-
-      // Mock data
-      setNotifications([
-        {
-          id: 1,
-          title: 'Welcome!',
-          message: 'Welcome Shamil! Your account has been created successfully.',
-          date: '12/11/2025',
-          time: '10:30 AM',
-          read: false,
-          type: 'info'
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      
+      if (!userStr) {
+        console.error('User not found');
+        setLoading(false);
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      const userId = user._id || user.id;
+      
+      const API_BASE_URL = 'http://localhost:3000/api';
+      
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.USER_NOTIFICATIONS(userId)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ]);
+      });
+      
+      const data = await response.json();
+      console.log('Notifications response:', data);
+      
+      if (data.success) {
+        setNotifications(data.data || []);
+      }
+      
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setLoading(false);
     }
   };
 
   const markAsRead = async (id) => {
     try {
-      // Replace with actual API call
-      // await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
-      setNotifications(notifications.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      ));
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = 'http://localhost:3000/api';
+      
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MARK_AS_READ(id)}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setNotifications(notifications.map(notif => 
+          notif._id === id ? { ...notif, read: true } : notif
+        ));
+      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
   };
 
-  const markAllAsRead = async () => {
+    const handleMarkAllAsRead = async () => {
     try {
-      // Replace with actual API call
-      // await fetch('/api/notifications/read-all', { method: 'PUT' });
-      setNotifications(notifications.map(notif => ({ ...notif, read: true })));
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+      await apiRequest(API_ENDPOINTS.MARK_ALL_READ(userId), { method: 'PUT' });
+      setNotifications([]);
+    } catch (err) {
+      setError('Failed to mark all as read: ' + err.message);
     }
   };
 
   const deleteNotification = async (id) => {
     try {
-      // Replace with actual API call
-      // await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
-      setNotifications(notifications.filter(notif => notif.id !== id));
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = 'http://localhost:3000/api';
+      
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATION_BY_ID(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setNotifications(notifications.filter(notif => notif._id !== id));
+      }
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
@@ -116,7 +155,7 @@ const Notifications = () => {
         <div className="header-title-group">
           <h1>Notifications</h1>
           {notifications.some(n => !n.read) && (
-            <button className="btn btn-text" onClick={markAllAsRead}>
+            <button className="btn-text" onClick={handleMarkAllAsRead}>
               Mark all as read
             </button>
           )}
@@ -146,28 +185,30 @@ const Notifications = () => {
         </div>
 
         <div className="notifications-container">
-          {filteredNotifications.length > 0 ? (
+          {loading ? (
+            <p className="empty-state-page">Loading notifications...</p>
+          ) : filteredNotifications.length > 0 ? (
             filteredNotifications.map(notification => (
               <div 
-                key={notification.id} 
+                key={notification._id} 
                 className={`notification-card ${!notification.read ? 'unread' : ''}`}
-                onClick={() => !notification.read && markAsRead(notification.id)}
+                onClick={() => !notification.read && markAsRead(notification._id)}
               >
-                <div className={`notification-icon ${notification.type}`}>
-                  {getNotificationIcon(notification.type)}
+                <div className={`notification-icon ${notification.type || 'info'}`}>
+                  {getNotificationIcon(notification.type || 'info')}
                 </div>
                 <div className="notification-content">
                   <h3>{notification.title}</h3>
                   <p>{notification.message}</p>
                   <span className="notification-time">
-                    {notification.date} at {notification.time}
+                    {new Date(notification.createdAt).toLocaleString()}
                   </span>
                 </div>
                 <button 
                   className="delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteNotification(notification.id);
+                    deleteNotification(notification._id);
                   }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">

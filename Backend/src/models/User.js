@@ -53,6 +53,7 @@ class User {
                 role: userData.role || 'student', // student, instructor, admin
                 status: 'active', // active, inactive, suspended
                 enrolledCourses: [], // Array of course IDs for students
+                completedCourses: [], // Array of completed course objects {courseId, completedAt, instructorId}
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
@@ -244,21 +245,64 @@ class User {
      * @returns {Promise<Array>} An array of unique student objects.
      */
     async findStudentsByInstructor(instructorId) {
-        const lessons = await this.db.collection('lessons').find({
+        const bookings = await this.db.collection('bookings').find({
             instructorId: new ObjectId(instructorId)
         }).toArray();
 
-        if (lessons.length === 0) {
+        if (bookings.length === 0) {
             return [];
         }
 
-        const studentIds = [...new Set(lessons.map(lesson => lesson.studentId))];
+        const studentIds = [...new Set(bookings.map(booking => booking.studentId))];
 
         const students = await this.collection.find({
             _id: { $in: studentIds }
         }).project({ password: 0 }).toArray();
 
         return students;
+    }
+
+    /**
+     * Mark a course as completed for a student
+     * @param {String} userId - User ID
+     * @param {String} courseId - Course ID
+     * @param {String} instructorId - Instructor ID who marked it complete
+     * @returns {Promise<Object>} Updated user
+     */
+    async markCourseComplete(userId, courseId, instructorId) {
+        const user = await this.collection.findOne({ _id: new ObjectId(userId) });
+        
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (user.role !== 'student') {
+            throw new Error('Only students can complete courses');
+        }
+
+        const completedCourses = user.completedCourses || [];
+        
+        if (completedCourses.some(c => c.courseId.toString() === courseId.toString())) {
+            throw new Error('Course already marked as completed');
+        }
+
+        const result = await this.collection.findOneAndUpdate(
+            { _id: new ObjectId(userId) },
+            { 
+                $push: { 
+                    completedCourses: {
+                        courseId: new ObjectId(courseId),
+                        completedAt: new Date(),
+                        instructorId: new ObjectId(instructorId)
+                    }
+                },
+                $set: { updatedAt: new Date() }
+            },
+            { returnDocument: 'after' }
+        );
+
+        delete result.password;
+        return result;
     }
 
     /**

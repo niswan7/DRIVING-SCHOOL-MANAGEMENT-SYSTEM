@@ -20,8 +20,10 @@ const BookLesson = () => {
   // Data from API
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [instructors, setInstructors] = useState([]);
-  const [availability, setAvailability] = useState({ available: false, slots: [] });
+  const [availability, setAvailability] = useState({ available: false, slots: [], fullyBooked: false });
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [instructorAvailableDates, setInstructorAvailableDates] = useState([]);
+  const [fullyBookedDates, setFullyBookedDates] = useState([]);
 
   // Fetch enrolled courses
   useEffect(() => {
@@ -35,6 +37,15 @@ const BookLesson = () => {
       fetchAvailability();
     }
   }, [selectedInstructor, selectedDate]);
+
+  // Fetch instructor schedule when instructor is selected
+  useEffect(() => {
+    if (selectedInstructor) {
+      fetchInstructorSchedule();
+    } else {
+      setInstructorAvailableDates([]);
+    }
+  }, [selectedInstructor, currentMonth]);
 
   const fetchEnrolledCourses = async () => {
     try {
@@ -99,6 +110,53 @@ const BookLesson = () => {
     }
   };
 
+  const fetchInstructorSchedule = async () => {
+    if (!selectedInstructor) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get date range for current month
+      const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+      
+      // Format dates in local timezone
+      const startDateStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}-${String(monthStart.getDate()).padStart(2, '0')}`;
+      const endDateStr = `${monthEnd.getFullYear()}-${String(monthEnd.getMonth() + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
+      
+      console.log('Fetching schedule for instructor:', selectedInstructor._id);
+      
+      const response = await fetch(
+        `${API_BASE_URL}/schedules/instructor/${selectedInstructor._id}?startDate=${startDateStr}&endDate=${endDateStr}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Failed to fetch instructor schedule:', response.status);
+        setInstructorAvailableDates([]);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Instructor schedule response:', data);
+      
+      if (data.success && data.data) {
+        // Extract dates from schedules
+        const availableDates = data.data.map(sched => new Date(sched.date));
+        setInstructorAvailableDates(availableDates);
+      } else {
+        setInstructorAvailableDates([]);
+      }
+    } catch (error) {
+      console.error('Error fetching instructor schedule:', error);
+      setInstructorAvailableDates([]);
+    }
+  };
+
   const fetchAvailability = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -130,7 +188,7 @@ const BookLesson = () => {
       
       if (!response.ok) {
         console.error('Failed to fetch availability:', response.status, response.statusText);
-        setAvailability({ available: false, slots: [] });
+        setAvailability({ available: false, slots: [], fullyBooked: false });
         return;
       }
       
@@ -139,12 +197,23 @@ const BookLesson = () => {
       
       if (data.success) {
         setAvailability(data.data);
+        
+        // Track fully booked dates
+        if (data.data.fullyBooked) {
+          setFullyBookedDates(prev => {
+            const dateExists = prev.some(d => d.toDateString() === selectedDate.toDateString());
+            if (!dateExists) {
+              return [...prev, new Date(selectedDate)];
+            }
+            return prev;
+          });
+        }
       } else {
-        setAvailability({ available: false, slots: [] });
+        setAvailability({ available: false, slots: [], fullyBooked: false });
       }
     } catch (error) {
       console.error('Error fetching availability:', error);
-      setAvailability({ available: false, slots: [] });
+      setAvailability({ available: false, slots: [], fullyBooked: false });
     }
   };
 
@@ -158,17 +227,25 @@ const BookLesson = () => {
       const user = JSON.parse(userStr);
       const userId = user._id || user.id;
 
+      // Format date to YYYY-MM-DD in local timezone
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+
       const lessonData = {
         instructorId: selectedInstructor._id,
         studentId: userId,
         courseId: selectedCourse._id,
-        date: selectedDate.toISOString().split('T')[0],
+        date: formattedDate,
         time: selectedTime,
         duration: 60,
         type: lessonType,
         status: 'scheduled',
         notes: notes
       };
+
+      console.log('Booking lesson with date:', formattedDate, 'from selectedDate:', selectedDate);
 
       const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSONS}`, {
         method: 'POST',
@@ -179,17 +256,20 @@ const BookLesson = () => {
         body: JSON.stringify(lessonData)
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (data.success) {
         alert('Lesson booked successfully!');
         navigate('/Dashboard');
       } else {
-        alert(data.message || 'Failed to book lesson');
+        console.error('Booking failed:', data);
+        alert(`Failed to book lesson: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error booking lesson:', error);
-      alert('Failed to book lesson. Please try again.');
+      alert(`Failed to book lesson: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -219,6 +299,20 @@ const BookLesson = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return date >= today;
+  };
+
+  const isDateAvailable = (date) => {
+    if (!date || !selectedInstructor) return false;
+    return instructorAvailableDates.some(availableDate => 
+      availableDate.toDateString() === date.toDateString()
+    );
+  };
+
+  const isDateFullyBooked = (date) => {
+    if (!date || !selectedInstructor) return false;
+    return fullyBookedDates.some(bookedDate => 
+      bookedDate.toDateString() === date.toDateString()
+    );
   };
 
   const formatDate = (date) => {
@@ -373,6 +467,20 @@ const BookLesson = () => {
             {selectedInstructor && (
               <div className="section">
                 <h3>Select Date</h3>
+                <div className="calendar-legend">
+                  <div className="legend-item">
+                    <span className="legend-indicator available"></span>
+                    <span>Instructor Available</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-indicator fully-booked"></span>
+                    <span>Fully Booked</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-indicator unavailable"></span>
+                    <span>Not Available</span>
+                  </div>
+                </div>
                 <div className="calendar-container">
                   <div className="calendar-header">
                     <button
@@ -392,17 +500,40 @@ const BookLesson = () => {
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                       <div key={day} className="calendar-day-header">{day}</div>
                     ))}
-                    {getDaysInMonth(currentMonth).map((date, index) => (
-                      <div
-                        key={index}
-                        className={`calendar-day ${!date ? 'empty' : ''} ${
-                          !isDateSelectable(date) ? 'disabled' : 'selectable'
-                        } ${selectedDate?.toDateString() === date?.toDateString() ? 'selected' : ''}`}
-                        onClick={() => isDateSelectable(date) && handleDateSelect(date)}
-                      >
-                        {date ? date.getDate() : ''}
-                      </div>
-                    ))}
+                    {getDaysInMonth(currentMonth).map((date, index) => {
+                      const isAvailable = isDateAvailable(date);
+                      const isFullyBooked = isDateFullyBooked(date);
+                      const isSelectable = isDateSelectable(date) && !isFullyBooked;
+                      const isSelected = selectedDate?.toDateString() === date?.toDateString();
+                      
+                      let title = '';
+                      if (isFullyBooked) {
+                        title = 'Fully booked';
+                      } else if (isAvailable) {
+                        title = 'Instructor available';
+                      }
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`calendar-day ${
+                            !date ? 'empty' : ''
+                          } ${
+                            !isSelectable ? 'disabled' : 'selectable'
+                          } ${
+                            isAvailable && !isFullyBooked ? 'available' : ''
+                          } ${
+                            isFullyBooked ? 'fully-booked' : ''
+                          } ${
+                            isSelected ? 'selected' : ''
+                          }`}
+                          onClick={() => isSelectable && handleDateSelect(date)}
+                          title={title}
+                        >
+                          {date ? date.getDate() : ''}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

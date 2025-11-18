@@ -21,6 +21,12 @@ function createScheduleRoutes(scheduleController) {
         (req, res) => scheduleController.getInstructorSchedule(req, res)
     );
 
+    // Get instructor schedule for a specific date
+    router.get('/instructor/:instructorId/date/:date',
+        AuthMiddleware.authenticate,
+        (req, res) => scheduleController.getInstructorScheduleByDate(req, res)
+    );
+
     // Copy previous week schedule
     router.post('/instructor/:instructorId/copy-week',
         AuthMiddleware.authenticate,

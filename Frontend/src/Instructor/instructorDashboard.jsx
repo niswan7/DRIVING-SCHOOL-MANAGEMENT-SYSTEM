@@ -6,10 +6,11 @@ import { API_ENDPOINTS } from '../config/api.js';
 
 // Import all the instructor pages
 import DashboardHome from './dashboardHome.jsx';
-import ManageLessons from './manageLesson.jsx';
-import ManageSchedule from './manageSchedule.jsx';
-import ConductLessons from './conductLesson.jsx';
-import TrackProgress from './trackProgress.jsx';
+import ManageLesson from './manageLesson';
+import ManageSchedule from './manageSchedule';
+import ConductLessons from './conductLesson';
+import ManageAssessments from './ManageAssessments';
+import ManageStudentProgress from './ManageStudentProgress';
 import ViewFeedback from './viewFeedback.jsx';
 import Notifications from './notifications.jsx';
 
@@ -39,18 +40,20 @@ const InstructorDashboard = () => {
   const fetchDashboardData = async (instructorId) => {
     try {
       console.log('Fetching dashboard data with instructor ID:', instructorId);
-      const [lessonsRes, feedbackRes, ratingRes, studentsRes] = await Promise.all([
+      const [lessonsRes, feedbackRes, ratingRes, studentsRes, hoursRes] = await Promise.all([
         apiRequest(API_ENDPOINTS.UPCOMING_LESSONS_INSTRUCTOR(instructorId)),
         apiRequest(API_ENDPOINTS.INSTRUCTOR_FEEDBACK(instructorId)),
         apiRequest(API_ENDPOINTS.INSTRUCTOR_RATING(instructorId)),
         apiRequest(API_ENDPOINTS.INSTRUCTOR_STUDENTS(instructorId)),
+        apiRequest(API_ENDPOINTS.INSTRUCTOR_MONTHLY_HOURS(instructorId)),
       ]);
 
       console.log('Dashboard data fetched:', {
         lessons: lessonsRes,
         feedback: feedbackRes,
         rating: ratingRes,
-        students: studentsRes
+        students: studentsRes,
+        hours: hoursRes
       });
 
       setDashboardData({
@@ -59,6 +62,7 @@ const InstructorDashboard = () => {
         recentFeedback: feedbackRes.data || [],
         averageRating: ratingRes.data?.averageRating || 0,
         activeStudents: studentsRes.data?.length || 0,
+        monthlyHours: hoursRes.data?.totalHours || 0,
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -69,6 +73,7 @@ const InstructorDashboard = () => {
         recentFeedback: [],
         averageRating: 0,
         activeStudents: 0,
+        monthlyHours: 0,
       });
     }
   };
@@ -82,11 +87,13 @@ const InstructorDashboard = () => {
       case 'schedule':
         return <ManageSchedule instructorId={userId} />;
       case 'lessons':
-        return <ManageLessons instructorId={userId} />;
+        return <ManageLesson instructorId={userId} />;
       case 'conduct-lessons':
         return <ConductLessons instructorId={userId} />;
+      case 'assessments':
+        return <ManageAssessments instructorId={userId} />;
       case 'progress':
-        return <TrackProgress instructorId={userId} />;
+        return <ManageStudentProgress instructorId={userId} />;
       case 'feedback':
         return <ViewFeedback instructorId={userId} />;
       case 'notifications':

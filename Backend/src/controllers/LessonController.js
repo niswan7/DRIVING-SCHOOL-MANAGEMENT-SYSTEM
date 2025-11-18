@@ -236,6 +236,29 @@ class LessonController {
             });
         }
     }
+
+    /**
+     * Update lesson attendance
+     * PATCH /api/lessons/:id/attendance
+     */
+    async updateAttendance(req, res) {
+        try {
+            const { id } = req.params;
+            const { attendance } = req.body;
+            
+            const lesson = await this.lessonService.updateAttendance(id, attendance);
+            res.status(200).json({
+                success: true,
+                data: lesson,
+                message: 'Attendance updated successfully'
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = LessonController;

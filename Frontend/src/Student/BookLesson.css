@@ -204,6 +204,71 @@
 }
 
 /* Calendar */
+.calendar-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #b0b0b0;
+}
+
+.legend-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+
+.legend-indicator.available {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.4);
+  position: relative;
+}
+
+.legend-indicator.available::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #4caf50;
+  border-radius: 50%;
+}
+
+.legend-indicator.unavailable {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.legend-indicator.fully-booked {
+  background: rgba(244, 67, 54, 0.15);
+  border-color: rgba(244, 67, 54, 0.4);
+  position: relative;
+}
+
+.legend-indicator.fully-booked::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #f44336;
+  border-radius: 50%;
+}
+
 .calendar-container {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -289,9 +354,56 @@
   cursor: pointer;
 }
 
+.calendar-day.available {
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  position: relative;
+}
+
+.calendar-day.available::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #4caf50;
+  border-radius: 50%;
+}
+
 .calendar-day.selectable:hover {
   background: rgba(255, 152, 0, 0.2);
   border-color: rgba(255, 152, 0, 0.5);
+}
+
+.calendar-day.available:hover {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.6);
+}
+
+.calendar-day.fully-booked {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  cursor: not-allowed;
+  position: relative;
+}
+
+.calendar-day.fully-booked::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #f44336;
+  border-radius: 50%;
+}
+
+.calendar-day.fully-booked:hover {
+  background: rgba(244, 67, 54, 0.15);
+  border-color: rgba(244, 67, 54, 0.4);
 }
 
 .calendar-day.selected {

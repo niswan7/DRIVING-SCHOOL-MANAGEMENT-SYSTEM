@@ -52,7 +52,42 @@ class ScheduleController {
      */
     async getInstructorSchedule(req, res) {
         try {
-            const schedules = await this.scheduleService.getInstructorSchedule(req.params.instructorId);
+            const { startDate, endDate } = req.query;
+            let schedules;
+            
+            if (startDate && endDate) {
+                schedules = await this.scheduleService.getInstructorScheduleByDateRange(
+                    req.params.instructorId,
+                    startDate,
+                    endDate
+                );
+            } else {
+                schedules = await this.scheduleService.getInstructorSchedule(req.params.instructorId);
+            }
+            
+            res.status(200).json({
+                success: true,
+                data: schedules,
+                count: schedules.length
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Get instructor schedule for a specific date
+     * GET /api/schedules/instructor/:instructorId/date/:date
+     */
+    async getInstructorScheduleByDate(req, res) {
+        try {
+            const schedules = await this.scheduleService.getInstructorScheduleByDate(
+                req.params.instructorId,
+                req.params.date
+            );
             res.status(200).json({
                 success: true,
                 data: schedules,

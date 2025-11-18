@@ -71,7 +71,14 @@
 .filter-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
 }
 
 .form-group {
@@ -80,12 +87,20 @@
   gap: 0.5rem;
 }
 
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
 .filter-form label {
   font-weight: 600;
   color: #ffffff;
+  font-size: 0.9rem;
 }
 
-.filter-form input {
+.filter-form input,
+.filter-form select {
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -96,19 +111,31 @@
   transition: all 0.3s ease;
 }
 
-.filter-form input:focus {
+.filter-form input:focus,
+.filter-form select:focus {
   outline: none;
   border-color: #ff8c00;
   box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
 }
 
-.filter-btn {
+.filter-form select option {
+  background-color: #222;
+  color: #fff;
+}
+
+.filter-btn,
+.clear-btn {
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.filter-btn {
   background: linear-gradient(135deg, #ff8c00 0%, #cc7000 100%);
   color: #fff;
   box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
@@ -117,6 +144,16 @@
 .filter-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 140, 0, 0.6);
+}
+
+.clear-btn {
+  background: #333;
+  color: #fff;
+}
+
+.clear-btn:hover {
+  background: #444;
+  transform: translateY(-2px);
 }
 
 .feedback-list {
@@ -141,10 +178,9 @@
 
 .feedback-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .student-name {
@@ -164,11 +200,22 @@
   font-size: 0.9rem;
   color: #a0aec0;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .feedback-course,
+.feedback-category,
 .feedback-date {
   margin: 0;
+}
+
+.feedback-category {
+  text-transform: capitalize;
+  background: rgba(255, 140, 0, 0.2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  color: #ff8c00;
+  font-weight: 600;
 }
 
 .feedback-comment {
@@ -193,4 +240,40 @@
 
 .no-feedback-message svg {
   color: #ff8c00;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-actions {
+    justify-content: stretch;
+  }
+  
+  .filter-btn,
+  .clear-btn {
+    flex: 1;
+  }
+  
+  .view-feedback-section {
+    padding: 2rem 1rem;
+  }
+  
+  .filter-card,
+  .feedback-list-card {
+    padding: 1.5rem;
+  }
 }

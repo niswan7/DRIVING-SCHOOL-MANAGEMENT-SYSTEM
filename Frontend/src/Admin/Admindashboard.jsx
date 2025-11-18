@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     LayoutDashboard, Settings, FileText, MessageSquare, 
     BookOpen, CreditCard, Users, LogOut, UserPlus, Trash2, Edit3, Search, ArrowLeft,
-    History, CheckSquare, FilePlus, Edit, X
+    History, CheckSquare, FilePlus, Edit, X, Receipt
 } from 'lucide-react';
 import './Admindashboard.css';
 import './modal.css';
@@ -599,6 +599,86 @@ function ManagePaymentsView({ navigate }) {
         }
     };
 
+    const generateReceipt = (payment) => {
+        const studentName = getStudentName(payment);
+        const receiptWindow = window.open('', '_blank');
+        const receiptHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Payment Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+                    .receipt-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                    .receipt-header h1 { margin: 0; color: #333; }
+                    .receipt-header p { margin: 5px 0; color: #666; }
+                    .receipt-details { margin: 30px 0; }
+                    .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                    .receipt-row strong { color: #333; }
+                    .receipt-row span { color: #666; }
+                    .total-row { font-size: 1.3rem; font-weight: bold; margin-top: 20px; padding-top: 20px; border-top: 2px solid #333; }
+                    .receipt-footer { margin-top: 50px; text-align: center; color: #999; font-size: 0.9rem; }
+                    .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+                    .status-completed { background: #d1fae5; color: #065f46; }
+                    .status-pending { background: #fed7aa; color: #92400e; }
+                    @media print { .no-print { display: none; } }
+                    .print-btn { background: #ff8c00; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 20px 5px; }
+                    .print-btn:hover { background: #cc7000; }
+                </style>
+            </head>
+            <body>
+                <div class="no-print">
+                    <button class="print-btn" onclick="window.print()">Print Receipt</button>
+                    <button class="print-btn" onclick="window.close()">Close</button>
+                </div>
+                <div class="receipt-header">
+                    <h1>PAYMENT RECEIPT</h1>
+                    <p>Driving School Management System</p>
+                    <p>Receipt #: ${payment._id.substring(0, 8).toUpperCase()}</p>
+                </div>
+                <div class="receipt-details">
+                    <div class="receipt-row">
+                        <strong>Student Name:</strong>
+                        <span>${studentName}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <strong>Payment Type:</strong>
+                        <span>${formatPaymentType(payment.type || 'course')}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <strong>Payment Method:</strong>
+                        <span>${formatPaymentMethod(payment.paymentMethod)}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <strong>Payment Date:</strong>
+                        <span>${new Date(payment.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <strong>Status:</strong>
+                        <span class="status-badge status-${payment.status}">${payment.status.toUpperCase()}</span>
+                    </div>
+                    ${payment.description ? `
+                    <div class="receipt-row">
+                        <strong>Description:</strong>
+                        <span>${payment.description}</span>
+                    </div>
+                    ` : ''}
+                    <div class="receipt-row total-row">
+                        <strong>Total Amount:</strong>
+                        <span>$${payment.amount}</span>
+                    </div>
+                </div>
+                <div class="receipt-footer">
+                    <p>Thank you for your payment!</p>
+                    <p>This is a computer-generated receipt.</p>
+                </div>
+            </body>
+            </html>
+        `;
+        receiptWindow.document.write(receiptHTML);
+        receiptWindow.document.close();
+    };
+
     const handleDeletePayment = async (id) => {
         if (window.confirm('Are you sure you want to delete this payment record?')) {
             try {
@@ -688,6 +768,11 @@ function ManagePaymentsView({ navigate }) {
                                 <td><span className={`status-badge status-${payment.status}`}>{payment.status}</span></td>
                                 <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
                                 <td className="actions">
+                                    {payment.status === 'completed' && (
+                                        <button className="btn btn-create" onClick={() => generateReceipt(payment)} style={{background: '#10b981'}}>
+                                            <Receipt size={16} /> Receipt
+                                        </button>
+                                    )}
                                     {payment.status === 'pending' && (
                                         <button className="btn btn-create" onClick={() => handleProcessPayment(payment._id)}>
                                             <CheckSquare size={16} /> Process

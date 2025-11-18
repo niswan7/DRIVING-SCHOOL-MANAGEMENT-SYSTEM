@@ -59,23 +59,33 @@ const GenerateCertificate = ({ navigate }) => {
             return;
         }
 
-        // Fetch student's completed courses
-        // For now, we'll show all courses. In a real scenario, you'd check progress/enrollment
+        // Fetch student's completed courses from user data
         setIsLoading(true);
         try {
-            const response = await apiRequest(API_ENDPOINTS.STUDENT_PROGRESS(studentId), {
+            const response = await apiRequest(API_ENDPOINTS.USER_BY_ID(studentId), {
                 method: 'GET'
             });
             
-            // Filter courses where progress is 100% (completed)
             if (response.success && response.data) {
-                const completed = response.data
-                    .filter(progress => progress.progressPercentage >= 100)
-                    .map(progress => progress.courseId);
+                const completedCoursesData = response.data.completedCourses || [];
                 
-                const completedCourseList = courses.filter(course => 
-                    completed.includes(course._id)
-                );
+                // Get the course IDs from completedCourses array
+                const completedCourseIds = completedCoursesData.map(cc => cc.courseId.toString());
+                
+                // Fetch course details for each completed course
+                const completedCourseList = [];
+                for (const courseId of completedCourseIds) {
+                    try {
+                        const courseResponse = await apiRequest(API_ENDPOINTS.COURSE_BY_ID(courseId), {
+                            method: 'GET'
+                        });
+                        if (courseResponse.success && courseResponse.data) {
+                            completedCourseList.push(courseResponse.data);
+                        }
+                    } catch (err) {
+                        console.error(`Error fetching course ${courseId}:`, err);
+                    }
+                }
                 
                 setCompletedCourses(completedCourseList);
                 
@@ -84,9 +94,9 @@ const GenerateCertificate = ({ navigate }) => {
                 }
             }
         } catch (err) {
-            // If progress endpoint doesn't exist or fails, show all courses
-            console.error('Error fetching progress:', err);
-            setCompletedCourses(courses);
+            console.error('Error fetching student data:', err);
+            setError('Failed to fetch student completed courses.');
+            setCompletedCourses([]);
         } finally {
             setIsLoading(false);
         }

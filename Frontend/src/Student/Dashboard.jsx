@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import BookLesson from './BookLesson';
 import LessonHistory from './LessonHistory';
-import Assessments from './Assessments';
+import Progress from './Progress';
 import MakePayment from './MakePayment';
 import PaymentHistory from './PaymentHistory';
 import Notifications from './Notification';
@@ -21,6 +21,7 @@ const DashboardHome = () => {
       title: "'s Portal"
     },
     nextLesson: null,
+    upcomingAssessments: [],
     progress: {
       completed: 0,
       total: 20,
@@ -28,7 +29,8 @@ const DashboardHome = () => {
     },
     payments: {
       balance: 0.00,
-      history: []
+      history: [],
+      pendingCount: 0
     },
     notifications: [],
     courses: [],
@@ -46,16 +48,26 @@ const DashboardHome = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
+      const userStr = localStorage.getItem('user');
       
-      if (!userId) {
-        console.error('User ID not found');
+      if (!userStr) {
+        console.error('User not found in localStorage');
         setLoading(false);
         return;
       }
       
-      // Fetch user's enrolled courses
+      const user = JSON.parse(userStr);
+      const userId = user._id || user.id;
+      
+      if (!userId) {
+        console.error('User ID not found in user object');
+        setLoading(false);
+        return;
+      }
+      
       const API_BASE_URL = 'http://localhost:3000/api';
+      
+      // Fetch user's enrolled courses
       const enrolledResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.GET_ENROLLED_COURSES(userId)}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -69,6 +81,92 @@ const DashboardHome = () => {
         setDashboardData(prev => ({
           ...prev,
           enrolledCourses: enrolledData.data || []
+        }));
+      }
+      
+      // Fetch upcoming bookings
+      const bookingsResponse = await fetch(`${API_BASE_URL}/bookings/student/${userId}/upcoming`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Bookings response status:', bookingsResponse.status);
+      const bookingsData = await bookingsResponse.json();
+      console.log('Upcoming bookings response:', bookingsData);
+      console.log('Bookings data array:', bookingsData.data);
+      console.log('Number of bookings:', bookingsData.data ? bookingsData.data.length : 0);
+      
+      if (bookingsData.success && bookingsData.data && bookingsData.data.length > 0) {
+        // Get the next upcoming booking
+        const nextBooking = bookingsData.data[0];
+        console.log('Setting next booking:', nextBooking);
+        setDashboardData(prev => ({
+          ...prev,
+          nextLesson: nextBooking
+        }));
+      } else {
+        console.log('No upcoming bookings found');
+        setDashboardData(prev => ({
+          ...prev,
+          nextLesson: null
+        }));
+      }
+      
+      // Fetch upcoming assessments
+      const assessmentsResponse = await fetch(`${API_BASE_URL}/assessments/student/${userId}/upcoming`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const assessmentsData = await assessmentsResponse.json();
+      console.log('Upcoming assessments response:', assessmentsData);
+      
+      if (assessmentsData.success && assessmentsData.data) {
+        setDashboardData(prev => ({
+          ...prev,
+          upcomingAssessments: assessmentsData.data || []
+        }));
+      }
+      
+      // Fetch payment summary
+      const paymentsResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STUDENT_PAYMENT_SUMMARY(userId)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const paymentsData = await paymentsResponse.json();
+      console.log('Payment summary response:', paymentsData);
+      
+      if (paymentsData.success) {
+        setDashboardData(prev => ({
+          ...prev,
+          payments: {
+            balance: Number(paymentsData.data?.pendingAmount || 0),
+            history: paymentsData.data?.recentPayments || [],
+            pendingCount: Number(paymentsData.data?.pendingCount || 0)
+          }
+        }));
+      }
+      
+      // Fetch notifications
+      const notificationsResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.USER_NOTIFICATIONS(userId)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const notificationsData = await notificationsResponse.json();
+      console.log('Notifications response:', notificationsData);
+      
+      if (notificationsData.success && notificationsData.data) {
+        // Get only unread notifications for the dashboard card
+        const unreadNotifications = notificationsData.data.filter(n => !n.read).slice(0, 3);
+        setDashboardData(prev => ({
+          ...prev,
+          notifications: unreadNotifications
         }));
       }
       
@@ -134,9 +232,19 @@ const DashboardHome = () => {
             <h2>Next Lesson</h2>
           </div>
           <div className="card-body">
-            <p className="empty-state">
-              {dashboardData.nextLesson ? dashboardData.nextLesson.details : "No upcoming lessons scheduled."}
-            </p>
+            {dashboardData.nextLesson ? (
+              <div className="lesson-details">
+                <p><strong>Date:</strong> {new Date(dashboardData.nextLesson.date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> {dashboardData.nextLesson.time}</p>
+                <p><strong>Duration:</strong> {dashboardData.nextLesson.duration} minutes</p>
+                <p><strong>Type:</strong> {dashboardData.nextLesson.type}</p>
+                {dashboardData.nextLesson.notes && (
+                  <p><strong>Notes:</strong> {dashboardData.nextLesson.notes}</p>
+                )}
+              </div>
+            ) : (
+              <p className="empty-state">No upcoming lessons scheduled.</p>
+            )}
           </div>
           <div className="card-actions">
             <button className="btn btn-primary" onClick={() => navigate('book-lesson')}>
@@ -148,32 +256,36 @@ const DashboardHome = () => {
           </div>
         </div>
 
-        {/* Progress Tracking Card */}
+        {/* Progress & Assessments Card */}
         <div className="card card-highlight">
           <div className="card-header">
             <svg className="icon orange" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M3 3v18h18"/>
               <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
             </svg>
-            <h2>Progress Tracking</h2>
+            <h2>Progress & Assessments</h2>
           </div>
           <div className="card-body">
-            <div className="progress-info">
-              <h3 className="progress-hours">
-                {dashboardData.progress.completed} / {dashboardData.progress.total} Hours
-              </h3>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
+            {dashboardData.upcomingAssessments.length > 0 ? (
+              <div className="assessments-preview">
+                <p className="section-label">Upcoming Assessments</p>
+                {dashboardData.upcomingAssessments.slice(0, 2).map(assessment => (
+                  <div key={assessment._id} className="assessment-item">
+                    <p className="assessment-title">{assessment.title}</p>
+                    <p className="assessment-due">Due: {new Date(assessment.dueDate).toLocaleDateString()}</p>
+                  </div>
+                ))}
+                {dashboardData.upcomingAssessments.length > 2 && (
+                  <p className="more-info">+{dashboardData.upcomingAssessments.length - 2} more</p>
+                )}
               </div>
-              <p className="progress-status">{dashboardData.progress.status}</p>
-            </div>
+            ) : (
+              <p className="empty-state">No upcoming assessments</p>
+            )}
           </div>
           <div className="card-actions">
-            <button className="btn btn-primary" onClick={() => navigate('assessments')}>
-              View Detailed Assessments
+            <button className="btn btn-primary" onClick={() => navigate('progress')}>
+              View Progress & Assessments
             </button>
           </div>
         </div>
@@ -188,17 +300,27 @@ const DashboardHome = () => {
             <h2>Payments</h2>
           </div>
           <div className="card-body">
-            <h3 className="payment-amount">Rs. {dashboardData.payments.balance.toFixed(2)}</h3>
-            <p className="empty-state">
-              {dashboardData.payments.history.length === 0 ? "No payment history found." : ""}
-            </p>
+            {(dashboardData.payments?.balance || 0) > 0 ? (
+              <>
+                <p className="payment-label">Pending Amount</p>
+                <h3 className="payment-amount">Rs. {(dashboardData.payments?.balance || 0).toFixed(2)}</h3>
+                <p className="payment-status">
+                  {dashboardData.payments.pendingCount} pending payment{dashboardData.payments.pendingCount > 1 ? 's' : ''}
+                </p>
+              </>
+            ) : (
+              <div className="no-pending-payments">
+                <svg className="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <p>No Pending Payments</p>
+              </div>
+            )}
           </div>
           <div className="card-actions">
-            <button className="btn btn-primary" onClick={() => navigate('make-payment')}>
-              Make Payment
-            </button>
-            <button className="btn btn-secondary" onClick={() => navigate('payment-history')}>
-              View Payment History
+            <button className="btn btn-primary" onClick={() => navigate('payment-history')}>
+              View Payments
             </button>
           </div>
         </div>
@@ -216,13 +338,18 @@ const DashboardHome = () => {
             <div className="notifications-list">
               {dashboardData.notifications.length > 0 ? (
                 dashboardData.notifications.slice(0, 1).map(notification => (
-                  <div key={notification.id} className="notification-item">
-                    <p className="notification-message">{notification.message}</p>
-                    <span className="notification-date">{notification.date}</span>
+                  <div key={notification._id} className="notification-item">
+                    <p className="notification-message">
+                      <strong>{notification.title}</strong><br />
+                      {notification.message}
+                    </p>
+                    <span className="notification-date">
+                      {new Date(notification.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 ))
               ) : (
-                <p className="empty-state">No notifications</p>
+                <p className="empty-state">No new notifications</p>
               )}
             </div>
           </div>
@@ -314,7 +441,7 @@ const Dashboard = () => {
         <Route path="/" element={<DashboardHome />} />
         <Route path="/book-lesson" element={<BookLesson />} />
         <Route path="/lesson-history" element={<LessonHistory />} />
-        <Route path="/assessments" element={<Assessments />} />
+        <Route path="/progress" element={<Progress />} />
         <Route path="/make-payment" element={<MakePayment />} />
         <Route path="/payment-history" element={<PaymentHistory />} />
         <Route path="/notifications" element={<Notifications />} />

@@ -31,8 +31,10 @@ class Feedback {
         const feedback = {
             studentId: new ObjectId(feedbackData.studentId),
             instructorId: new ObjectId(feedbackData.instructorId),
+            courseId: feedbackData.courseId ? new ObjectId(feedbackData.courseId) : null,
             lessonId: feedbackData.lessonId ? new ObjectId(feedbackData.lessonId) : null,
             rating: feedbackData.rating, // 1-5
+            category: feedbackData.category || 'general',
             comment: feedbackData.comment || '',
             isAnonymous: feedbackData.isAnonymous || false,
             status: 'active', // active, archived
@@ -60,10 +62,47 @@ class Feedback {
      * @returns {Promise<Array>} Array of feedback
      */
     async findByInstructor(instructorId) {
-        return await this.collection
-            .find({ instructorId: new ObjectId(instructorId) })
-            .sort({ createdAt: -1 })
-            .toArray();
+        return await this.collection.aggregate([
+            {
+                $match: { instructorId: new ObjectId(instructorId) }
+            },
+            {
+                $lookup: {
+                    from: 'courses',
+                    localField: 'courseId',
+                    foreignField: '_id',
+                    as: 'courseId'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$courseId',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'studentId',
+                    foreignField: '_id',
+                    as: 'studentId'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$studentId',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    'studentId.password': 0
+                }
+            },
+            {
+                $sort: { createdAt: -1 }
+            }
+        ]).toArray();
     }
 
     /**
@@ -116,23 +155,93 @@ class Feedback {
      * @returns {Promise<Array>} Array of feedback
      */
     async findAll(filters = {}) {
-        const query = {};
+        const matchStage = {};
 
         if (filters.instructorId) {
-            query.instructorId = new ObjectId(filters.instructorId);
+            matchStage.instructorId = new ObjectId(filters.instructorId);
         }
 
         if (filters.studentId) {
-            query.studentId = new ObjectId(filters.studentId);
+            matchStage.studentId = new ObjectId(filters.studentId);
         }
 
         if (filters.rating) {
-            query.rating = parseInt(filters.rating);
+            matchStage.rating = parseInt(filters.rating);
         }
 
         return await this.collection
-            .find(query)
-            .sort({ createdAt: -1 })
+            .aggregate([
+                { $match: matchStage },
+                {
+                    $lookup: {
+                        from: 'courses',
+                        localField: 'courseId',
+                        foreignField: '_id',
+                        as: 'course'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'studentId',
+                        foreignField: '_id',
+                        as: 'student'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'instructorId',
+                        foreignField: '_id',
+                        as: 'instructor'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$course',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$student',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$instructor',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        studentId: 1,
+                        instructorId: 1,
+                        courseId: 1,
+                        rating: 1,
+                        category: 1,
+                        comment: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        'course._id': 1,
+                        'course.name': 1,
+                        'course.title': 1,
+                        'student._id': 1,
+                        'student.firstName': 1,
+                        'student.lastName': 1,
+                        'student.name': 1,
+                        'student.email': 1,
+                        'instructor._id': 1,
+                        'instructor.firstName': 1,
+                        'instructor.lastName': 1,
+                        'instructor.name': 1,
+                        'instructor.email': 1
+                    }
+                },
+                { $sort: { createdAt: -1 } }
+            ])
             .toArray();
     }
 

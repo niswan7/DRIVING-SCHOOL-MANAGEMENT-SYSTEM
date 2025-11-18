@@ -12,18 +12,29 @@ export const API_ENDPOINTS = {
   USER_BY_ID: (id) => `/users/${id}`,
   USERS_BY_ROLE: (role) => `/users/role/${role}`,
   INSTRUCTOR_STUDENTS: (id) => `/users/instructor/${id}/students`,
+  INSTRUCTOR_STUDENT_COURSES: (instructorId, studentId) => `/users/instructor/${instructorId}/student/${studentId}/enrolled-courses`,
   CHANGE_PASSWORD: (id) => `/users/${id}/change-password`,
   ENROLL_COURSE: (id) => `/users/${id}/enroll`,
   GET_ENROLLED_COURSES: (id) => `/users/${id}/enrolled-courses`,
   UNENROLL_COURSE: (id) => `/users/${id}/unenroll`,
+  COMPLETE_COURSE: (id) => `/users/${id}/complete-course`,
   
-  // Lessons
-  LESSONS: '/lessons',
-  LESSON_BY_ID: (id) => `/lessons/${id}`,
-  INSTRUCTOR_LESSONS: (id) => `/lessons/instructor/${id}`,
-  UPCOMING_LESSONS_INSTRUCTOR: (id) => `/lessons/instructor/${id}/upcoming`,
-  UPCOMING_LESSONS_STUDENT: (id) => `/lessons/student/${id}/upcoming`,
-  COMPLETE_LESSON: (id) => `/lessons/${id}/complete`,
+  // Bookings
+  BOOKINGS: '/bookings',
+  BOOKING_BY_ID: (id) => `/bookings/${id}`,
+  INSTRUCTOR_BOOKINGS: (id) => `/bookings/instructor/${id}`,
+  INSTRUCTOR_MONTHLY_HOURS: (id) => `/bookings/instructor/${id}/monthly-hours`,
+  UPCOMING_BOOKINGS_INSTRUCTOR: (id) => `/bookings/instructor/${id}/upcoming`,
+  UPCOMING_BOOKINGS_STUDENT: (id) => `/bookings/student/${id}/upcoming`,
+  COMPLETE_BOOKING: (id) => `/bookings/${id}/complete`,
+  
+  // Legacy aliases for backward compatibility (deprecated - use BOOKINGS instead)
+  LESSONS: '/bookings',
+  LESSON_BY_ID: (id) => `/bookings/${id}`,
+  INSTRUCTOR_LESSONS: (id) => `/bookings/instructor/${id}`,
+  UPCOMING_LESSONS_INSTRUCTOR: (id) => `/bookings/instructor/${id}/upcoming`,
+  UPCOMING_LESSONS_STUDENT: (id) => `/bookings/student/${id}/upcoming`,
+  COMPLETE_LESSON: (id) => `/bookings/${id}/complete`,
   
   // Schedules
   SCHEDULES: '/schedules',
@@ -62,6 +73,15 @@ export const API_ENDPOINTS = {
   // Courses
   COURSES: '/courses',
   COURSE_BY_ID: (id) => `/courses/${id}`,
+  
+  // Assessments
+  ASSESSMENTS: '/assessments',
+  ASSESSMENT_BY_ID: (id) => `/assessments/${id}`,
+  UPCOMING_ASSESSMENTS_STUDENT: (id) => `/assessments/student/${id}/upcoming`,
+  STUDENT_ASSESSMENT_STATS: (id) => `/assessments/student/${id}/stats`,
+  ASSESSMENTS_BY_STUDENT_COURSE: (studentId, courseId) => `/assessments/student/${studentId}/course/${courseId}`,
+  UPDATE_ASSESSMENT_SCORE: (id) => `/assessments/${id}/score`,
+  COMPLETE_ASSESSMENT: (id) => `/assessments/${id}/complete`,
 };
 
 export default API_BASE_URL;
