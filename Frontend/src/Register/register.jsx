@@ -61,7 +61,23 @@ function Register() {
     } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
       newErrors.phone = 'Phone number must be 10 digits';
     }
-    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = 'Date of birth is required';
+    } else {
+      // Validate age - must be at least 18 years old
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      
+      // Calculate exact age
+      const exactAge = age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+      
+      if (exactAge < 18) {
+        newErrors.dateOfBirth = 'You must be at least 18 years old to register';
+      }
+    }
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.state.trim()) newErrors.state = 'State is required';
@@ -101,12 +117,10 @@ function Register() {
           password: formData.password,
           phone: formData.phone,
           dateOfBirth: formData.dateOfBirth,
-          address: {
-            street: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zipCode
-          },
+          address: formData.address, // street field
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
           role: 'student' // Default role for registration
         };
 
@@ -221,6 +235,7 @@ function Register() {
                 className={`register-input ${errors.dateOfBirth ? 'error' : ''}`}
                 value={formData.dateOfBirth}
                 onChange={handleChange}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
               />
               {errors.dateOfBirth && <span className="error-text">{errors.dateOfBirth}</span>}
             </div>

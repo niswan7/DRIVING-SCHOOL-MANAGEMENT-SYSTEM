@@ -61,7 +61,14 @@ const ManageAssessments = ({ instructorId }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    
+    // If student selection changes, reset course selection
+    if (name === 'studentId') {
+      setForm({ ...form, [name]: value, courseId: '' });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    
     setError('');
     setSuccess('');
   };
@@ -224,6 +231,27 @@ const ManageAssessments = ({ instructorId }) => {
     }
   };
 
+  // Get filtered courses based on selected student's enrolled courses
+  const getAvailableCourses = () => {
+    if (!form.studentId) {
+      return [];
+    }
+    
+    const selectedStudent = students.find(s => s._id === form.studentId);
+    if (!selectedStudent || !selectedStudent.enrolledCourses || selectedStudent.enrolledCourses.length === 0) {
+      return [];
+    }
+    
+    // Filter courses that the student has enrolled in
+    const enrolledCourseIds = selectedStudent.enrolledCourses.map(courseId => 
+      typeof courseId === 'object' ? courseId._id : courseId
+    );
+    
+    return courses.filter(course => 
+      enrolledCourseIds.some(id => id.toString() === course._id.toString())
+    );
+  };
+
   return (
     <div className="manage-assessments-section">
       <div className="section-header">
@@ -327,14 +355,22 @@ const ManageAssessments = ({ instructorId }) => {
                   value={form.courseId}
                   onChange={handleInputChange}
                   required
+                  disabled={!form.studentId}
                 >
-                  <option value="">Select a course</option>
-                  {courses.map(course => (
+                  <option value="">
+                    {!form.studentId ? 'Select a student first' : 'Select a course'}
+                  </option>
+                  {getAvailableCourses().map(course => (
                     <option key={course._id} value={course._id}>
                       {course.name || course.title}
                     </option>
                   ))}
                 </select>
+                {form.studentId && getAvailableCourses().length === 0 && (
+                  <small style={{ color: '#ff6b6b', marginTop: '0.25rem', display: 'block' }}>
+                    This student has not enrolled in any courses yet
+                  </small>
+                )}
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import Register from './Register/register.jsx'
 import ForgotPassword from './ForgotPassword/forgotPassword.jsx'
 import InstructorDashboard from './Instructor/instructorDashboard.jsx';
 import AdminDashboard from './Admin/Admindashboard.jsx';
+import Courses from './Courses/Courses.jsx';
 import { Route, Routes } from 'react-router-dom'
 import StudentDashboard from './Student/Dashboard.jsx'
 
@@ -15,6 +16,7 @@ function App() {
          <Route path='/Login' element={<Login/>}/>
          <Route path='/Register' element={<Register/>}/>
          <Route path='/ForgotPassword' element={<ForgotPassword/>}/>
+         <Route path='/Courses' element={<Courses/>}/>
          
          {/* Student Dashboard with nested routes */}
          <Route path="/Dashboard/*" element={<StudentDashboard />} />

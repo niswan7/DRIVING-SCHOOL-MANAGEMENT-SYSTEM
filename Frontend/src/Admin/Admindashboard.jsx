@@ -247,6 +247,25 @@ function ManageUsersView({ navigate }) {
 
   const handleSubmitUser = async (e) => {
     e.preventDefault();
+    
+    // Validate date of birth - must be at least 18 years old
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      
+      // Calculate exact age
+      const exactAge = age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+      
+      if (exactAge < 18) {
+        alert('User must be at least 18 years old');
+        setIsLoading(false);
+        return;
+      }
+    }
+    
     setIsLoading(true);
 
     try {
@@ -398,7 +417,16 @@ function ManageUsersView({ navigate }) {
                   </div>
                   <div className="form-group">
                     <label>Date of Birth</label>
-                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleFormChange} />
+                    <input 
+                      type="date" 
+                      name="dateOfBirth" 
+                      value={formData.dateOfBirth} 
+                      onChange={handleFormChange}
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    />
+                    <small style={{color: '#666', fontSize: '0.85em', marginTop: '4px', display: 'block'}}>
+                      User must be at least 18 years old
+                    </small>
                   </div>
                 </div>
                 <div className="form-group">
@@ -697,6 +725,22 @@ function ManagePaymentsView({ navigate }) {
 
     const handleSubmitPayment = async (e) => {
         e.preventDefault();
+        
+        // Validate amount
+        const amount = parseFloat(formData.amount);
+        if (isNaN(amount)) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        if (amount < 5) {
+            alert('Amount must be at least $5');
+            return;
+        }
+        if (amount > 100000) {
+            alert('Amount cannot exceed $100,000');
+            return;
+        }
+        
         setIsLoading(true);
 
         try {
@@ -847,12 +891,16 @@ function ManagePaymentsView({ navigate }) {
                                                 value={formData.amount} 
                                                 onChange={handleFormChange} 
                                                 required 
-                                                min="0"
+                                                min="5"
+                                                max="100000"
                                                 step="0.01"
-                                                placeholder="0.00"
+                                                placeholder="5.00 - 100,000.00"
                                                 className="amount-input"
                                             />
                                         </div>
+                                        <small style={{color: '#666', fontSize: '0.85em', marginTop: '4px', display: 'block'}}>
+                                            Amount must be between $5 and $100,000
+                                        </small>
                                     </div>
                                     <div className="form-group">
                                         <label>

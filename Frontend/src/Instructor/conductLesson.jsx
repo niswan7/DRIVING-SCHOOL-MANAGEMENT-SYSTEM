@@ -23,11 +23,14 @@ const ConductLessons = ({ instructorId }) => {
       console.log('Upcoming lessons:', res.data);
       
       const all = res.data || [];
-      // Filter to only show scheduled/confirmed lessons
+      
+      // Separate in-progress and upcoming lessons
+      const inProgress = all.filter(lesson => lesson.status === 'in-progress');
       const upcoming = all.filter(lesson => 
         lesson.status === 'scheduled' || lesson.status === 'confirmed'
       );
       
+      setActiveLessons(inProgress);
       setUpcomingLessons(upcoming);
       setLoading(false);
     } catch (err) {

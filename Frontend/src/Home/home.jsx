@@ -121,8 +121,8 @@ function HOME() {
                 <Phone size={28} />
               </div>
               <h3>Phone</h3>
-              <p>+91 12345 67890</p>
-              <p>Mon-Sat: 8AM - 8PM</p>
+              <p>+91 80780 06591</p>
+              <p>Mon-Sat: 8AM - 6PM</p>
             </div>
             <div className="contact-card">
               <div className="contact-icon">
@@ -138,22 +138,8 @@ function HOME() {
               </div>
               <h3>Location</h3>
               <p>123 Driving Range Rd</p>
-              <p>New Delhi, 110001</p>
+              <p>Alappuzha, 688504</p>
             </div>
-          </div>
-          <div className="contact-form-wrapper">
-            <form className="contact-form">
-              <div className="form-row">
-                <input type="text" placeholder="Your Name" className="form-input" required />
-                <input type="email" placeholder="Your Email" className="form-input" required />
-              </div>
-              <div className="form-row">
-                <input type="tel" placeholder="Phone Number" className="form-input" />
-                <input type="text" placeholder="Subject" className="form-input" required/>
-              </div>
-              <textarea placeholder="Your Message" className="form-textarea" rows={5} required></textarea>
-              <button type="submit" className="form-submit">Send Message</button>
-            </form>
           </div>
         </div>
       </div>
@@ -187,21 +173,14 @@ function HOME() {
           <div className="footer-column">
             <h4>Contact Info</h4>
             <p className="footer-info">
-              <Phone size={16} /> +91 12345 67890
+              <Phone size={16} /> +91 80780 06591
             </p>
             <p className="footer-info">
               <Mail size={16} /> info@driveeasy.com
             </p>
             <p className="footer-info">
-              <MapPin size={16} /> 123 Driving Range Rd, New Delhi
+              <MapPin size={16} /> 123 Driving Range Rd, Alappuzha
             </p>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} DriveEasy Driving School. All rights reserved.</p>
-          <div className="footer-bottom-links">
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
           </div>
         </div>
       </footer>
